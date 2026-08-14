@@ -63,44 +63,6 @@ swift build -c release
 ./.build/release/StockBar
 ```
 
-## 🚢 发布与热修复
-
-项目只保留 `main` 一个长期分支,开发使用临时特性分支(`feat/`、`fix/`、`docs/` 等),通过 Pull Request 合入 `main`(需通过编译检查)。
-
-- **发布新版**:从 `main` 切出 `release/vX.Y.Z` 分支并推送,即自动构建、生成变更日志并发布到 [Releases](https://github.com/huandc/StockBar/releases),版本号取自分支名
-- **热修复(补丁)**:从对应版本分支切出补丁分支 `release/vX.Y.1`(如 `release/v1.2.0` → `release/v1.2.1`),修复后推送即自动发布补丁版本;发布后工作流会自动创建「回合到 main」的 PR,确保修复不会在下次发布时丢失
-- **提交规范**:PR 标题遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)(`feat:` / `fix:` / `docs:` / `ci:` …),变更日志与 Release notes 据此自动生成
-
-## 🐛 问题反馈
-
-使用中遇到问题,或有功能建议?欢迎提交 Issue:
-
-- 提 Issue 入口:<https://github.com/huandc/StockBar/issues/new>
-- 请尽量提供以下信息,方便快速定位:
-  - 问题描述与期望行为
-  - 复现步骤
-  - 股票代码、macOS 版本、应用版本
-  - 截图或报错信息
-
-> 提示:行情获取失败时,优先检查股票代码格式(A 股带 `.SS`/`.SZ`,港股带 `.HK`)与网络能否访问 Yahoo Finance。
-
-## 📁 项目结构
-
-```
-StockBar/
-├── Package.swift                    # SwiftPM 工程(executable target, macOS 13+)
-├── LICENSE                          # MIT 开源协议
-├── cliff.toml                       # git-cliff 配置:Conventional Commits → 变更日志
-├── .github/workflows/
-│   ├── release.yml                  # CI:release/* 分支触发构建、变更日志与发布
-│   └── pr-check.yml                 # CI:PR 编译检查 + 标题规范校验
-└── Sources/StockBar/
-    ├── StockBarApp.swift            # @main 入口 + MenuBarExtra 菜单栏
-    ├── QuoteModel.swift             # 状态模型:定时刷新、设置持久化、涨跌配色
-    ├── StockFetcher.swift           # Yahoo Finance 行情接口客户端
-    └── ContentView.swift            # 弹出面板 UI(行情详情 + 设置)
-```
-
 ## ❓ 常见问题
 
 **菜单栏显示 `--` 或「未获取到行情」?**
@@ -120,6 +82,34 @@ StockBar/
 **支持 macOS 版本?**
 
 macOS 13 (Ventura) 及以上(基于 SwiftUI `MenuBarExtra`)。
+
+## 🐛 问题反馈
+
+使用中遇到问题,或有功能建议?欢迎提交 Issue:
+
+- 提 Issue 入口:<https://github.com/huandc/StockBar/issues/new>
+- 请尽量提供以下信息,方便快速定位:
+  - 问题描述与期望行为
+  - 复现步骤
+  - 股票代码、macOS 版本、应用版本
+  - 截图或报错信息
+
+## 📁 项目结构
+
+```
+StockBar/
+├── Package.swift                    # SwiftPM 工程(executable target, macOS 13+)
+├── LICENSE                          # MIT 开源协议
+├── cliff.toml                       # git-cliff 配置:Conventional Commits → 变更日志
+├── .github/workflows/
+│   ├── release.yml                  # CI:release/* 分支触发构建、变更日志与发布
+│   └── pr-check.yml                 # CI:PR 编译检查 + 标题规范校验
+└── Sources/StockBar/
+    ├── StockBarApp.swift            # @main 入口 + MenuBarExtra 菜单栏
+    ├── QuoteModel.swift             # 状态模型:定时刷新、设置持久化、涨跌配色
+    ├── StockFetcher.swift           # Yahoo Finance 行情接口客户端
+    └── ContentView.swift            # 弹出面板 UI(行情详情 + 设置)
+```
 
 ## 📄 License
 
