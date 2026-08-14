@@ -36,9 +36,23 @@ swift build -c release
 
 设置会自动保存,下次启动沿用。
 
+## 自动打包 Release(CI)
+
+项目已配置 GitHub Actions:每次推送到 `main` 分支,云端会自动:
+
+1. 在 macOS 上编译 Release 版本
+2. 打包成标准的 `StockBar.app`(含 Info.plist、菜单栏应用 `LSUIElement`、ad-hoc 签名)
+3. 压缩为 `StockBar-<版本>-macOS.zip` 并发布到 **Releases 页面**
+
+在 https://github.com/huandc/StockBar/releases 下载最新版本。
+
+- 版本号:普通推送自动为 `1.0.<运行序号>`;打 tag `v1.2.0` 则按 `1.2.0` 发布
+- 手动触发:仓库 Actions 页面 → **Build & Release** → **Run workflow**
+- 下载 zip 解压后,把 `StockBar.app` 拖入「应用程序」即可双击使用(未公证的应用首次需右键 →「打开」确认)
+
 ## 开机自启(可选)
 
-系统设置 → 通用 → 登录项 → 添加该应用。若使用终端路径,可先用 Automator 或 App 打包工具包一层 `.app`,或直接:
+下载 Releases 里的 `StockBar.app` 放到「应用程序」后,系统设置 → 通用 → 登录项 → 「+」→ 添加 `StockBar.app` 即可。本地命令行方式:
 
 ```bash
 ln -sf "$PWD/.build/release/StockBar" ~/Applications/StockBar
