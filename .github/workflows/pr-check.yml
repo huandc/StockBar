@@ -1,0 +1,29 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 编译检查
+        run: swift build
+
+      - name: PR 标题符合 Conventional Commits
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if ! [[ "${PR_TITLE}" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_.-]+\))?!?:\ .+ ]]; then
+            echo "::error::PR 标题不符合 Conventional Commits 规范"
+            echo "示例: feat: 新增 XX / fix: 修复 XX / docs: 更新文档 / ci: 调整流水线"
+            exit 1
+          fi

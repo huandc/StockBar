@@ -2,7 +2,8 @@ name: Build & Release
 
 on:
   push:
-    # release/* 分支:创建或推送即触发发布(创建分支 = 发布,热修复提交 = 重新发布)
+    # release/* 分支:创建或推送即触发发布
+    # 语义:发布新版 = 从 main 切 release/vX.Y.Z;补丁 = 从对应版本分支切 release/vX.Y.1
     branches: [ 'release/*' ]
   workflow_dispatch:
     inputs:
@@ -13,14 +14,17 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
     name: 构建并发布 StockBar
     runs-on: macos-latest
     steps:
-      - name: 检出代码
+      - name: 检出代码(完整历史,供变更日志生成)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 编译 Release 版本
         run: swift build -c release
@@ -86,6 +90,18 @@ jobs:
           ditto -c -k --keepParent StockBar.app "StockBar-${VERSION}-macOS.zip"
           echo "打包完成: StockBar-${VERSION}-macOS.zip"
 
+      - name: 生成变更日志(Conventional Commits)
+        run: |
+          set -euo pipefail
+          brew install git-cliff >/dev/null 2>&1
+          git-cliff --unreleased > .notes.tmp 2>/dev/null || echo "" > .notes.tmp
+          {
+            echo "## StockBar ${VERSION}"
+            echo ""
+            cat .notes.tmp
+          } > notes.md
+          cat notes.md
+
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
@@ -108,6 +124,22 @@ jobs:
             gh release create "${TAG}" "${ZIP}" \
               --repo "${{ github.repository }}" \
               --title "StockBar ${VERSION}" \
-              --notes "自动打包于 commit \`${{ github.sha }}\`。下载后解压,将 StockBar.app 拖入「应用程序」文件夹,首次运行请右键 →「打开」。"
+              --notes-file notes.md
             echo "已创建 Release ${TAG}"
+          fi
+
+      - name: 回合到 main(防漂移)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git merge-base --is-ancestor HEAD refs/remotes/origin/main 2>/dev/null; then
+            echo "::notice::release 分支内容已全部在 main 中,无需回合"
+          else
+            echo "release 分支包含 main 中没有的提交(通常是热修复),自动创建回合 PR..."
+            gh pr create --base main --head "${GITHUB_REF_NAME}" \
+              --repo "${{ github.repository }}" \
+              --title "fix: 回合 ${GITHUB_REF_NAME} 的修复到 main" \
+              --body "自动创建:${GITHUB_REF_NAME} 包含 main 中不存在的提交(通常是热修复)。请合入 main,防止修复在下次发布时丢失。" \
+              || echo "::notice::回合 PR 可能已存在,跳过"
           fi
