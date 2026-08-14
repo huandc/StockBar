@@ -54,6 +54,27 @@ final class QuoteModel: ObservableObject {
     /// 当前实际生效的数据源(开启降级后可能与 selectedProvider 不同)
     @Published private(set) var activeProvider: QuoteProvider
 
+    /// 菜单栏显示格式(默认代码 + 价格,保持现状)
+    @Published var menuBarFormat: MenuBarFormat {
+        didSet {
+            UserDefaults.standard.set(menuBarFormat.rawValue, forKey: "menuBarFormat")
+        }
+    }
+
+    /// 自定义模板(仅 menuBarFormat == .custom 生效)
+    @Published var menuBarTemplate: String {
+        didSet {
+            UserDefaults.standard.set(menuBarTemplate, forKey: "menuBarTemplate")
+        }
+    }
+
+    /// 自定义显示名,留空使用接口返回的名称
+    @Published var displayName: String {
+        didSet {
+            UserDefaults.standard.set(displayName, forKey: "displayName")
+        }
+    }
+
     private var timer: Timer?
     private var consecutiveFailures = 0
 
@@ -66,6 +87,9 @@ final class QuoteModel: ObservableObject {
         selectedProvider = provider
         activeProvider = provider
         enableFallback = defaults.object(forKey: "enableFallback") as? Bool ?? true
+        menuBarFormat = MenuBarFormat(rawValue: defaults.string(forKey: "menuBarFormat") ?? "") ?? .codePrice
+        menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
+        displayName = defaults.string(forKey: "displayName") ?? ""
         restartTimer()
     }
 
@@ -132,12 +156,35 @@ final class QuoteModel: ObservableObject {
 
     // MARK: 展示
 
+    /// 显示名:自定义别名优先,其次接口名称,最后回退代码
+    var resolvedName: String? {
+        let custom = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !custom.isEmpty { return custom }
+        return quote?.name
+    }
+
     var menuBarText: String {
         let code = symbol.uppercased()
-        if let q = quote {
+        guard let q = quote else { return "\(code) --" }
+        switch menuBarFormat {
+        case .codePrice:
             return "\(code) \(String(format: "%.2f", q.price))"
+        case .namePrice:
+            return "\(resolvedName ?? code) \(String(format: "%.2f", q.price))"
+        case .nameCodePrice:
+            return "\(resolvedName ?? code) \(code) \(String(format: "%.2f", q.price))"
+        case .custom:
+            let template = menuBarTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !template.isEmpty else { return "\(code) \(String(format: "%.2f", q.price))" }
+            return MenuBarTemplate.render(
+                template: template,
+                code: code,
+                name: resolvedName,
+                price: q.price,
+                change: q.change,
+                changePercent: q.changePercent
+            )
         }
-        return "\(code) --"
     }
 
     var menuBarColor: Color {

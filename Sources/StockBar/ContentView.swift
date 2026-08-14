@@ -25,7 +25,7 @@ struct ContentView: View {
     private var header: some View {
         if let q = model.quote {
             VStack(spacing: 4) {
-                if let name = q.name {
+                if let name = model.resolvedName {
                     Text(name)
                         .font(.headline)
                         .lineLimit(1)
@@ -115,6 +115,30 @@ struct ContentView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
             }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("菜单栏格式")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker("菜单栏格式", selection: $model.menuBarFormat) {
+                        ForEach(MenuBarFormat.allCases) { f in
+                            Text(f.label).tag(f)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                if model.menuBarFormat == .custom {
+                    TextField("模板,如 {name} {price}({changePercent}%)", text: $model.menuBarTemplate)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                }
+            }
+
+            TextField("自定义名称(留空 = 接口名称)", text: $model.displayName)
+                .textFieldStyle(.roundedBorder)
+                .font(.caption)
 
             Toggle("红涨绿跌(中国习惯)", isOn: $model.redUpGreenDown)
                 .font(.caption)
