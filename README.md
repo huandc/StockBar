@@ -1,77 +1,118 @@
-# StockBar — 菜单栏股票价格
+# StockBar 📈
 
-一个纯菜单栏的 Mac 应用:在菜单栏实时显示某只股票的当前价格,涨绿跌红(可切换中国习惯的红涨绿跌),点击可查看详情与设置。
+> 一个纯菜单栏的 Mac 股票行情应用 —— 在菜单栏实时显示某只股票的当前价格,涨跌颜色一目了然。
 
-数据来源:Yahoo Finance 免费行情接口(无需 API Key)。
+[![Build & Release](https://github.com/huandc/StockBar/actions/workflows/release.yml/badge.svg)](https://github.com/huandc/StockBar/actions/workflows/release.yml)
 
-## 支持的股票代码
+数据来源:[Yahoo Finance](https://finance.yahoo.com/) 免费行情接口,无需 API Key,无需注册。
 
-| 市场 | 示例 |
-| --- | --- |
-| 美股 | `AAPL`、`MSFT`、`TSLA` |
-| A 股(沪) | `600519.SS`(贵州茅台) |
-| A 股(深) | `000001.SZ`(平安银行) |
-| 港股 | `0700.HK`(腾讯控股) |
+## ✨ 功能特性
 
-## 编译
+- **菜单栏常驻显示**:右上角菜单栏直接展示「代码 + 现价」,一眼可见,不挡屏幕
+- **涨跌配色**:默认绿涨红跌,可一键切换为中国习惯的**红涨绿跌**
+- **实时刷新**:5 / 10 / 30 / 60 秒可选自动刷新,也可手动立即刷新
+- **股票详情**:点击菜单栏数字,弹出面板查看名称、现价、涨跌额、涨跌幅、行情时间
+- **完全可配置**:支持美股 / A股 / 港股代码,设置自动保存,下次启动沿用
+- **纯净体验**:无 Dock 图标、无窗口,只活在菜单栏里
 
-```bash
-cd stockbar
-swift build -c release
+菜单栏效果示意:
+
+```
+  🔍  WiFi  ⚡  100%  ┆  AAPL 305.26  ┆  9:41
 ```
 
-## 运行
+## 📥 安装(推荐)
+
+1. 打开 [Releases 页面](https://github.com/huandc/StockBar/releases),下载最新版 `StockBar-<版本>-macOS.zip`
+2. 解压后把 `StockBar.app` 拖入「应用程序」文件夹
+3. 首次打开:因未做苹果公证,需**右键点击 StockBar.app →「打开」→ 再次确认打开**
+4. 菜单栏右上角出现 `AAPL --` 即启动成功
+
+> 若提示「无法打开,因为无法验证开发者」:系统设置 → 隐私与安全性 → 仍要打开。
+
+## 🚀 使用方法
+
+点击菜单栏的 `AAPL 305.26` 弹出面板:
+
+| 功能 | 操作 |
+| --- | --- |
+| 查看详情 | 名称、现价、涨跌额/幅、行情时间、更新时间 |
+| 切换股票 | 输入代码 → 回车或点「保存」,立即生效 |
+| 刷新间隔 | 点选 5 / 10 / 30 / 60 秒 |
+| 涨跌配色 | 勾选「红涨绿跌(中国习惯)」 |
+| 手动刷新 | 点「立即刷新」 |
+| 退出应用 | 点「退出」(应用无 Dock 图标,只能从这里退出) |
+
+### 股票代码写法
+
+| 市场 | 格式 | 示例 |
+| --- | --- | --- |
+| 美股 | 直接代码 | `AAPL`、`MSFT`、`TSLA` |
+| A 股·沪市 | 代码 + `.SS` | `600519.SS`(贵州茅台) |
+| A 股·深市 | 代码 + `.SZ` | `000001.SZ`(平安银行) |
+| 港股 | 代码 + `.HK` | `0700.HK`(腾讯控股) |
+
+## 🔧 从源码构建
+
+**环境要求**:macOS 13+、Swift 5.10+ / Xcode Command Line Tools(无需完整 Xcode)
 
 ```bash
+git clone git@github.com:huandc/StockBar.git
+cd StockBar
+swift build -c release
 ./.build/release/StockBar
 ```
 
-启动后菜单栏会出现 `AAPL 234.56` 这样的文本,点击弹出面板:
+## 🤖 自动打包 Release(CI)
 
-- 查看名称、价格、涨跌幅、行情时间
-- 修改股票代码(输入后回车或点「保存」)
-- 调整刷新间隔(5/10/30/60 秒)
-- 切换「红涨绿跌(中国习惯)」
-- 立即刷新 / 退出
+项目内置 GitHub Actions 工作流([.github/workflows/release.yml](.github/workflows/release.yml)),代码一推送,云端自动完成 **编译 → 打包 `.app` → ad-hoc 签名 → 压缩 → 发布 Release**:
 
-设置会自动保存,下次启动沿用。
+| 触发方式 | 发布版本 |
+| --- | --- |
+| 推送代码到 `main` | 自动发布 `1.0.<运行序号>` |
+| 打 tag(正式发版) | `git tag v2.0.0 && git push --tags` → 发布 `2.0.0` |
+| 手动触发 | Actions 页面 → **Build & Release** → **Run workflow** |
 
-## 自动打包 Release(CI)
+构建产物说明:
 
-项目已配置 GitHub Actions:每次推送到 `main` 分支,云端会自动:
+- `StockBar.app`:标准 macOS 应用包(含 `Info.plist`,`LSUIElement` 纯菜单栏模式)
+- `StockBar-<版本>-macOS.zip`:安装包,解压即用
+- ad-hoc 签名,可在 Apple Silicon 上正常运行(正式发布到 App Store 需开发者证书,本项目暂不需要)
 
-1. 在 macOS 上编译 Release 版本
-2. 打包成标准的 `StockBar.app`(含 Info.plist、菜单栏应用 `LSUIElement`、ad-hoc 签名)
-3. 压缩为 `StockBar-<版本>-macOS.zip` 并发布到 **Releases 页面**
+## 🖥 开机自启(可选)
 
-在 https://github.com/huandc/StockBar/releases 下载最新版本。
+1. 将 `StockBar.app` 放入「应用程序」
+2. 系统设置 → 通用 → 登录项 → 「+」→ 选择 `StockBar.app`
 
-- 版本号:普通推送自动为 `1.0.<运行序号>`;打 tag `v1.2.0` 则按 `1.2.0` 发布
-- 手动触发:仓库 Actions 页面 → **Build & Release** → **Run workflow**
-- 下载 zip 解压后,把 `StockBar.app` 拖入「应用程序」即可双击使用(未公证的应用首次需右键 →「打开」确认)
-
-## 开机自启(可选)
-
-下载 Releases 里的 `StockBar.app` 放到「应用程序」后,系统设置 → 通用 → 登录项 → 「+」→ 添加 `StockBar.app` 即可。本地命令行方式:
-
-```bash
-ln -sf "$PWD/.build/release/StockBar" ~/Applications/StockBar
-```
-
-## 常见问题
-
-- **显示「未获取到行情」**:股票代码无效,或网络无法访问 Yahoo;A 股/港股代码记得带 `.SS` / `.SZ` / `.HK` 后缀。
-- **退出**:点菜单栏图标 → 「退出」,应用无 Dock 图标,不能从 Dock 退出。
-- **要求 macOS 13+**。
-
-## 项目结构
+## 📁 项目结构
 
 ```
-stockbar/
-├── Package.swift              # SwiftPM 工程(executable target)
+StockBar/
+├── Package.swift                    # SwiftPM 工程(executable target, macOS 13+)
+├── .github/workflows/release.yml    # CI:自动打包 + 发布 Release
 └── Sources/StockBar/
-    ├── StockBarApp.swift      # @main 入口 + MenuBarExtra 菜单栏
-    ├── QuoteModel.swift       # 状态模型、定时刷新、涨跌配色
-    ├── StockFetcher.swift     # Yahoo 行情接口客户端
-    └── ContentView.swift      # 弹出面板 UI(详情 + 设置)
+    ├── StockBarApp.swift            # @main 入口 + MenuBarExtra 菜单栏
+    ├── QuoteModel.swift             # 状态模型:定时刷新、设置持久化、涨跌配色
+    ├── StockFetcher.swift           # Yahoo Finance 行情接口客户端
+    └── ContentView.swift            # 弹出面板 UI(行情详情 + 设置)
 ```
+
+## ❓ 常见问题
+
+**菜单栏显示 `--` 或「未获取到行情」?**
+
+- 检查股票代码格式(A 股带 `.SS`/`.SZ`,港股带 `.HK`)
+- 检查网络能否访问 Yahoo Finance(国内网络可能需要代理)
+- 点「立即刷新」重试
+
+**如何退出应用?**
+
+菜单栏数字 → 面板 → 「退出」。应用无 Dock 图标,Cmd+Tab 里也看不到它。
+
+**为什么首次打开提示无法验证开发者?**
+
+应用未经过 Apple 公证(Notarization)。个人自用不影响,右键 →「打开」即可;若需彻底消除提示,可后续配置开发者证书签名。
+
+**支持 macOS 版本?**
+
+macOS 13 (Ventura) 及以上(基于 SwiftUI `MenuBarExtra`)。
