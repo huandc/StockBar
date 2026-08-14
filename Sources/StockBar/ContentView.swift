@@ -140,8 +140,29 @@ struct ContentView: View {
                 .textFieldStyle(.roundedBorder)
                 .font(.caption)
 
-            Toggle("红涨绿跌(中国习惯)", isOn: $model.redUpGreenDown)
-                .font(.caption)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("配色方案")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker("配色方案", selection: $model.colorPreset) {
+                        ForEach(ColorPreset.allCases) { p in
+                            Text(p.label).tag(p)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                if model.colorPreset == .custom {
+                    HStack(spacing: 12) {
+                        ColorPicker("涨", selection: $model.upColor, supportsOpacity: false)
+                        ColorPicker("跌", selection: $model.downColor, supportsOpacity: false)
+                        ColorPicker("平", selection: $model.flatColor, supportsOpacity: false)
+                    }
+                    .font(.caption)
+                    .controlSize(.small)
+                }
+            }
         }
     }
 

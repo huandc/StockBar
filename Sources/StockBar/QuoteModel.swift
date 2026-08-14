@@ -27,11 +27,26 @@ final class QuoteModel: ObservableObject {
         }
     }
 
-    /// 中国习惯:红涨绿跌(默认 false,即绿涨红跌)
-    @Published var redUpGreenDown: Bool {
+    /// 配色方案(默认国际:绿涨红跌;旧版「红涨绿跌」开关自动迁移)
+    @Published var colorPreset: ColorPreset {
         didSet {
-            UserDefaults.standard.set(redUpGreenDown, forKey: "redUpGreenDown")
+            UserDefaults.standard.set(colorPreset.rawValue, forKey: "colorPreset")
         }
+    }
+
+    /// 自定义涨色(默认绿 #22C55E)
+    @Published var upColor: Color {
+        didSet { persistColor(upColor, forKey: "upColorRGB") }
+    }
+
+    /// 自定义跌色(默认红 #EF4444)
+    @Published var downColor: Color {
+        didSet { persistColor(downColor, forKey: "downColorRGB") }
+    }
+
+    /// 自定义平盘色(默认灰 #9CA3AF)
+    @Published var flatColor: Color {
+        didSet { persistColor(flatColor, forKey: "flatColorRGB") }
     }
 
     /// 数据源(默认 Yahoo Finance)
@@ -82,7 +97,6 @@ final class QuoteModel: ObservableObject {
         let defaults = UserDefaults.standard
         symbol = defaults.string(forKey: "symbol") ?? "AAPL"
         refreshInterval = defaults.object(forKey: "refreshInterval") as? Int ?? 10
-        redUpGreenDown = defaults.bool(forKey: "redUpGreenDown")
         let provider = QuoteProvider(rawValue: defaults.string(forKey: "dataSource") ?? "") ?? .yahoo
         selectedProvider = provider
         activeProvider = provider
@@ -90,7 +104,20 @@ final class QuoteModel: ObservableObject {
         menuBarFormat = MenuBarFormat(rawValue: defaults.string(forKey: "menuBarFormat") ?? "") ?? .codePrice
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
         displayName = defaults.string(forKey: "displayName") ?? ""
+        // 配色:新键 colorPreset 优先;老用户按旧开关 redUpGreenDown 迁移
+        if let presetRaw = defaults.string(forKey: "colorPreset") {
+            colorPreset = ColorPreset(rawValue: presetRaw) ?? .international
+        } else {
+            colorPreset = defaults.bool(forKey: "redUpGreenDown") ? .chinese : .international
+        }
+        upColor = RGBColor.decode(defaults.data(forKey: "upColorRGB") ?? Data())?.color ?? ColorPreset.defaultUp
+        downColor = RGBColor.decode(defaults.data(forKey: "downColorRGB") ?? Data())?.color ?? ColorPreset.defaultDown
+        flatColor = RGBColor.decode(defaults.data(forKey: "flatColorRGB") ?? Data())?.color ?? ColorPreset.defaultFlat
         restartTimer()
+    }
+
+    private func persistColor(_ color: Color, forKey key: String) {
+        UserDefaults.standard.set(color.rgb?.encodeData(), forKey: key)
     }
 
     // MARK: 刷新
@@ -193,12 +220,16 @@ final class QuoteModel: ObservableObject {
     }
 
     func changeColor(_ q: Quote) -> Color {
-        if q.change > 0 {
-            return redUpGreenDown ? .red : .green
-        } else if q.change < 0 {
-            return redUpGreenDown ? .green : .red
+        let isUp = q.change > 0
+        let isDown = q.change < 0
+        switch colorPreset {
+        case .international:
+            return isUp ? ColorPreset.defaultUp : (isDown ? ColorPreset.defaultDown : ColorPreset.defaultFlat)
+        case .chinese:
+            return isUp ? ColorPreset.defaultDown : (isDown ? ColorPreset.defaultUp : ColorPreset.defaultFlat)
+        case .custom:
+            return isUp ? upColor : (isDown ? downColor : flatColor)
         }
-        return .secondary
     }
 
     /// 带符号的涨跌幅文本,如 "+1.23 (+0.52%)"
