@@ -1,0 +1,31 @@
+# git-cliff 配置:根据 Conventional Commits 生成变更日志
+[changelog]
+header = ""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {{ commit.message | upper_first }}
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+footer = ""
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+sort_commits = "newest"
+commit_parsers = [
+  { message = "^feat", group = "✨ 新功能" },
+  { message = "^fix", group = "🐛 修复" },
+  { message = "^perf", group = "⚡ 性能优化" },
+  { message = "^docs", group = "📝 文档" },
+  { message = "^ci|^build", group = "🔧 工程与 CI" },
+  { message = "^refactor", group = "♻️ 重构" },
+  { message = "^test", group = "✅ 测试" },
+  { message = "^style", group = "💄 样式" },
+  { message = "^chore", group = "🧹 杂项" },
+  { message = "^revert", group = "⏪ 回退" },
+  { message = ".*", group = "其他" },
+]
