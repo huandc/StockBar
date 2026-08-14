@@ -15,6 +15,7 @@ final class QuoteModel: ObservableObject {
     @Published var symbol: String {
         didSet {
             UserDefaults.standard.set(symbol, forKey: "symbol")
+            recordHistory(symbol)
             restartTimer()
             Task { await refresh() }
         }
@@ -90,12 +91,17 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 最近输入的股票代码(供设置面板快捷选择),最新的在最前
+    @Published private(set) var symbolHistory: [String]
+
+    private static let maxHistoryCount = 10
     private var timer: Timer?
     private var consecutiveFailures = 0
 
     init() {
         let defaults = UserDefaults.standard
         symbol = defaults.string(forKey: "symbol") ?? "AAPL"
+        symbolHistory = defaults.stringArray(forKey: "symbolHistory") ?? []
         refreshInterval = defaults.object(forKey: "refreshInterval") as? Int ?? 10
         let provider = QuoteProvider(rawValue: defaults.string(forKey: "dataSource") ?? "") ?? .yahoo
         selectedProvider = provider
@@ -118,6 +124,20 @@ final class QuoteModel: ObservableObject {
 
     private func persistColor(_ color: Color, forKey key: String) {
         UserDefaults.standard.set(color.rgb?.encodeData(), forKey: key)
+    }
+
+    /// 记录股票代码到历史(去重、最新在前、最多 10 条)
+    func recordHistory(_ symbol: String) {
+        let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let upper = trimmed.uppercased()
+        var list = symbolHistory.filter { $0.uppercased() != upper }
+        list.insert(upper, at: 0)
+        if list.count > Self.maxHistoryCount {
+            list = Array(list.prefix(Self.maxHistoryCount))
+        }
+        symbolHistory = list
+        UserDefaults.standard.set(list, forKey: "symbolHistory")
     }
 
     // MARK: 刷新
@@ -194,12 +214,12 @@ final class QuoteModel: ObservableObject {
         let code = symbol.uppercased()
         guard let q = quote else { return "\(code) --" }
         switch menuBarFormat {
+        case .price:
+            return String(format: "%.2f", q.price)
         case .codePrice:
             return "\(code) \(String(format: "%.2f", q.price))"
         case .namePrice:
             return "\(resolvedName ?? code) \(String(format: "%.2f", q.price))"
-        case .nameCodePrice:
-            return "\(resolvedName ?? code) \(code) \(String(format: "%.2f", q.price))"
         case .custom:
             let template = menuBarTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !template.isEmpty else { return "\(code) \(String(format: "%.2f", q.price))" }
