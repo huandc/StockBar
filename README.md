@@ -63,26 +63,18 @@ swift build -c release
 ./.build/release/StockBar
 ```
 
-## 🤝 开发与贡献
+## 🐛 问题反馈
 
-项目采用简单的双分支模型:
+使用中遇到问题,或有功能建议?欢迎提交 Issue:
 
-```
-dev(默认分支)──开发都在这里 ──PR──▶ main(受保护,只能通过 PR 合并)
-```
+- 提 Issue 入口:<https://github.com/huandc/StockBar/issues/new>
+- 请尽量提供以下信息,方便快速定位:
+  - 问题描述与期望行为
+  - 复现步骤
+  - 股票代码、macOS 版本、应用版本
+  - 截图或报错信息
 
-- **`dev`**:默认分支,日常开发、所有功能变更都基于它
-- **`main`**:受保护分支,不接受直接推送,只能通过 Pull Request 合并;合并后云端自动编译打包并发布到 Releases
-
-### 参与方式
-
-1. Fork 本仓库,`git clone` 你的 fork(默认即 `dev` 分支)
-2. 基于 `dev` 创建特性分支:`` git checkout -b feat/xxx ``
-3. 修改代码,提交后推送到你的 fork
-4. 发起 Pull Request(目标分支选 `dev`),在 PR 中说明改动内容
-5. 审核通过后合入 `dev`;累积一定改动后,再由维护者将 `dev` 合并到 `main` 发布新版本
-
-> 非代码类改动(如文档、翻译、Issue 反馈)同样欢迎,直接在 `dev` 上提 PR 即可。
+> 提示:行情获取失败时,优先检查股票代码格式(A 股带 `.SS`/`.SZ`,港股带 `.HK`)与网络能否访问 Yahoo Finance。
 
 ## 📁 项目结构
 
