@@ -4,7 +4,7 @@
 
 [![Build & Release](https://github.com/huandc/StockBar/actions/workflows/release.yml/badge.svg)](https://github.com/huandc/StockBar/actions/workflows/release.yml)
 
-数据来源:[Yahoo Finance](https://finance.yahoo.com/) 免费行情接口,无需 API Key,无需注册。
+数据来源:[Yahoo Finance](https://finance.yahoo.com/) 免费行情接口,无需 API Key,无需注册。完全免费、开源。
 
 ## ✨ 功能特性
 
@@ -21,7 +21,7 @@
   🔍  WiFi  ⚡  100%  ┆  AAPL 305.26  ┆  9:41
 ```
 
-## 📥 安装(推荐)
+## 📥 安装
 
 1. 打开 [Releases 页面](https://github.com/huandc/StockBar/releases),下载最新版 `StockBar-<版本>-macOS.zip`
 2. 解压后把 `StockBar.app` 拖入「应用程序」文件夹
@@ -63,33 +63,34 @@ swift build -c release
 ./.build/release/StockBar
 ```
 
-## 🤖 自动打包 Release(CI)
+## 🤝 开发与贡献
 
-项目内置 GitHub Actions 工作流([.github/workflows/release.yml](.github/workflows/release.yml)),代码一推送,云端自动完成 **编译 → 打包 `.app` → ad-hoc 签名 → 压缩 → 发布 Release**:
+项目采用简单的双分支模型:
 
-| 触发方式 | 发布版本 |
-| --- | --- |
-| 推送代码到 `main` | 自动发布 `1.0.<运行序号>` |
-| 打 tag(正式发版) | `git tag v2.0.0 && git push --tags` → 发布 `2.0.0` |
-| 手动触发 | Actions 页面 → **Build & Release** → **Run workflow** |
+```
+dev(默认分支)──开发都在这里 ──PR──▶ main(受保护,只能通过 PR 合并)
+```
 
-构建产物说明:
+- **`dev`**:默认分支,日常开发、所有功能变更都基于它
+- **`main`**:受保护分支,不接受直接推送,只能通过 Pull Request 合并;合并后云端自动编译打包并发布到 Releases
 
-- `StockBar.app`:标准 macOS 应用包(含 `Info.plist`,`LSUIElement` 纯菜单栏模式)
-- `StockBar-<版本>-macOS.zip`:安装包,解压即用
-- ad-hoc 签名,可在 Apple Silicon 上正常运行(正式发布到 App Store 需开发者证书,本项目暂不需要)
+### 参与方式
 
-## 🖥 开机自启(可选)
+1. Fork 本仓库,`git clone` 你的 fork(默认即 `dev` 分支)
+2. 基于 `dev` 创建特性分支:`` git checkout -b feat/xxx ``
+3. 修改代码,提交后推送到你的 fork
+4. 发起 Pull Request(目标分支选 `dev`),在 PR 中说明改动内容
+5. 审核通过后合入 `dev`;累积一定改动后,再由维护者将 `dev` 合并到 `main` 发布新版本
 
-1. 将 `StockBar.app` 放入「应用程序」
-2. 系统设置 → 通用 → 登录项 → 「+」→ 选择 `StockBar.app`
+> 非代码类改动(如文档、翻译、Issue 反馈)同样欢迎,直接在 `dev` 上提 PR 即可。
 
 ## 📁 项目结构
 
 ```
 StockBar/
 ├── Package.swift                    # SwiftPM 工程(executable target, macOS 13+)
-├── .github/workflows/release.yml    # CI:自动打包 + 发布 Release
+├── LICENSE                          # MIT 开源协议
+├── .github/workflows/release.yml    # CI:合并到 main 后自动打包发布
 └── Sources/StockBar/
     ├── StockBarApp.swift            # @main 入口 + MenuBarExtra 菜单栏
     ├── QuoteModel.swift             # 状态模型:定时刷新、设置持久化、涨跌配色
@@ -111,8 +112,12 @@ StockBar/
 
 **为什么首次打开提示无法验证开发者?**
 
-应用未经过 Apple 公证(Notarization)。个人自用不影响,右键 →「打开」即可;若需彻底消除提示,可后续配置开发者证书签名。
+应用未经过 Apple 公证(Notarization)。个人使用不影响,右键 →「打开」即可。
 
 **支持 macOS 版本?**
 
 macOS 13 (Ventura) 及以上(基于 SwiftUI `MenuBarExtra`)。
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 chong.huan
