@@ -82,7 +82,7 @@ swift build -c release
 StockBar/
 ├── Package.swift                    # SwiftPM 工程(executable target, macOS 13+)
 ├── LICENSE                          # MIT 开源协议
-├── .github/workflows/release.yml    # CI:合并到 main 后自动打包发布
+├── .github/workflows/release.yml    # CI:release/* 分支触发自动打包发布
 └── Sources/StockBar/
     ├── StockBarApp.swift            # @main 入口 + MenuBarExtra 菜单栏
     ├── QuoteModel.swift             # 状态模型:定时刷新、设置持久化、涨跌配色
