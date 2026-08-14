@@ -34,13 +34,38 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 数据源(默认 Yahoo Finance)
+    @Published var selectedProvider: QuoteProvider {
+        didSet {
+            UserDefaults.standard.set(selectedProvider.rawValue, forKey: "dataSource")
+            activeProvider = selectedProvider // 用户切换数据源时重置当前生效源
+            restartTimer()
+            Task { await refresh() }
+        }
+    }
+
+    /// 主源失败自动切换备用源(默认开启)
+    @Published var enableFallback: Bool {
+        didSet {
+            UserDefaults.standard.set(enableFallback, forKey: "enableFallback")
+        }
+    }
+
+    /// 当前实际生效的数据源(开启降级后可能与 selectedProvider 不同)
+    @Published private(set) var activeProvider: QuoteProvider
+
     private var timer: Timer?
+    private var consecutiveFailures = 0
 
     init() {
         let defaults = UserDefaults.standard
         symbol = defaults.string(forKey: "symbol") ?? "AAPL"
         refreshInterval = defaults.object(forKey: "refreshInterval") as? Int ?? 10
         redUpGreenDown = defaults.bool(forKey: "redUpGreenDown")
+        let provider = QuoteProvider(rawValue: defaults.string(forKey: "dataSource") ?? "") ?? .yahoo
+        selectedProvider = provider
+        activeProvider = provider
+        enableFallback = defaults.object(forKey: "enableFallback") as? Bool ?? true
         restartTimer()
     }
 
@@ -53,11 +78,40 @@ final class QuoteModel: ObservableObject {
             return
         }
         do {
-            quote = try await StockFetcher.fetch(symbol: trimmed)
+            quote = try await fetchWithFallback(trimmed)
             errorMessage = nil
             lastUpdated = Date()
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    /// 优先用所选数据源;连续失败 2 次自动切到备用源;降级期间每轮尝试恢复所选源
+    private func fetchWithFallback(_ symbol: String) async throws -> Quote {
+        // 降级状态:每轮先尝试所选源,成功即切回;失败继续用备用源
+        if activeProvider != selectedProvider {
+            do {
+                let q = try await selectedProvider.provider.fetch(symbol: symbol)
+                activeProvider = selectedProvider
+                consecutiveFailures = 0
+                return q
+            } catch {
+                return try await activeProvider.provider.fetch(symbol: symbol)
+            }
+        }
+
+        do {
+            let q = try await activeProvider.provider.fetch(symbol: symbol)
+            consecutiveFailures = 0
+            return q
+        } catch {
+            guard enableFallback else { throw error }
+            consecutiveFailures += 1
+            guard consecutiveFailures >= 2 else { throw error }
+            consecutiveFailures = 0
+            let backup: QuoteProvider = activeProvider == .yahoo ? .eastmoney : .yahoo
+            activeProvider = backup
+            return try await backup.provider.fetch(symbol: symbol)
         }
     }
 

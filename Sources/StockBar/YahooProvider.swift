@@ -1,36 +1,12 @@
 import Foundation
 
-/// 一只股票的最新行情
-struct Quote: Codable {
-    let symbol: String
-    let price: Double
-    let previousClose: Double
-    let currency: String
-    let marketTime: Date?
-    let name: String?
-
-    var change: Double { price - previousClose }
-    var changePercent: Double { previousClose > 0 ? change / previousClose * 100 : 0 }
-}
-
-enum FetchError: LocalizedError {
-    case http(Int)
-    case api(String)
-    case noData
-
-    var errorDescription: String? {
-        switch self {
-        case .http(let code): return "网络错误(HTTP \(code))"
-        case .api(let msg):   return "接口错误:\(msg)"
-        case .noData:         return "未获取到行情,请检查股票代码是否有效"
-        }
-    }
-}
-
 /// 从 Yahoo Finance 获取实时行情(无需 API Key)
 /// 支持的代码示例: AAPL / MSFT / 600519.SS(茅台) / 000001.SZ / 0700.HK(腾讯)
-enum StockFetcher {
-    static func fetch(symbol: String) async throws -> Quote {
+struct YahooProvider: QuoteProviding {
+    var id: String { "yahoo" }
+    var displayName: String { "Yahoo Finance" }
+
+    func fetch(symbol: String) async throws -> Quote {
         let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
         let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed
         let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(encoded)?interval=1d&range=1d")!
@@ -49,7 +25,7 @@ enum StockFetcher {
         guard (200..<300).contains(http.statusCode) else {
             throw FetchError.http(http.statusCode)
         }
-        return try parse(data: data, symbol: trimmed)
+        return try Self.parse(data: data, symbol: trimmed)
     }
 
     // MARK: - 解析
@@ -78,7 +54,7 @@ enum StockFetcher {
         }
     }
 
-    static func parse(data: Data, symbol: String) throws -> Quote {
+    private static func parse(data: Data, symbol: String) throws -> Quote {
         let decoded: ChartResponse
         do {
             decoded = try JSONDecoder().decode(ChartResponse.self, from: data)

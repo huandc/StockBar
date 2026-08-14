@@ -15,7 +15,7 @@ struct ContentView: View {
             footer
         }
         .padding(16)
-        .frame(width: 320)
+        .frame(width: 360)
         .onAppear { draftSymbol = model.symbol }
     }
 
@@ -80,6 +80,26 @@ struct ContentView: View {
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(applySymbol)
                 Button("保存", action: applySymbol)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("数据源")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker("数据源", selection: $model.selectedProvider) {
+                        ForEach(QuoteProvider.allCases) { p in
+                            Text(p.displayName).tag(p)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                Toggle("主源失败自动切换备用源", isOn: $model.enableFallback)
+                    .font(.caption)
+                Text("当前来源:\(model.activeProvider.displayName)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
 
             HStack {
