@@ -2,8 +2,14 @@ name: Build & Release
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    # 只有代码/构建配置变更才自动打包;README、文档等日常改动不触发
+    - branches: [ main ]
+      paths:
+        - 'Sources/**'
+        - 'Package.swift'
+        - '.github/workflows/**'
+    # 打 tag v* 永远发布(与变更文件无关)
+    - tags: [ 'v*' ]
   workflow_dispatch:
 
 permissions:
