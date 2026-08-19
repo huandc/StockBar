@@ -206,6 +206,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Picker("刷新间隔", selection: $draftRefreshInterval) {
+                    Text("2秒").tag(2)
                     Text("5秒").tag(5)
                     Text("10秒").tag(10)
                     Text("30秒").tag(30)
