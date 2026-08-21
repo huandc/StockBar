@@ -89,6 +89,12 @@ struct ContentView: View {
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
         }
+
+        if model.refreshOnlyInSession && !model.marketOpen {
+            Text("当前休市,暂停自动刷新")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
     }
 
     // MARK: 底部
@@ -122,6 +128,7 @@ struct SettingsView: View {
     @State private var draftProvider: QuoteProvider = .yahoo
     @State private var draftEnableFallback = true
     @State private var draftRefreshInterval = 10
+    @State private var draftRefreshOnlyInSession = true
     @State private var draftMenuBarFormat: MenuBarFormat = .codePrice
     @State private var draftMenuBarTemplate = ""
     @State private var draftDisplayName = ""
@@ -215,6 +222,9 @@ struct SettingsView: View {
                 .labelsHidden()
             }
 
+            Toggle("仅交易时段自动刷新", isOn: $draftRefreshOnlyInSession)
+                .font(.caption)
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("菜单栏格式")
@@ -272,6 +282,7 @@ struct SettingsView: View {
         draftProvider = model.selectedProvider
         draftEnableFallback = model.enableFallback
         draftRefreshInterval = model.refreshInterval
+        draftRefreshOnlyInSession = model.refreshOnlyInSession
         draftMenuBarFormat = model.menuBarFormat
         draftMenuBarTemplate = model.menuBarTemplate
         draftDisplayName = model.displayName
@@ -287,6 +298,7 @@ struct SettingsView: View {
         model.selectedProvider = draftProvider
         model.enableFallback = draftEnableFallback
         model.refreshInterval = draftRefreshInterval
+        model.refreshOnlyInSession = draftRefreshOnlyInSession
         model.menuBarFormat = draftMenuBarFormat
         model.menuBarTemplate = draftMenuBarTemplate
         model.displayName = draftDisplayName
