@@ -62,4 +62,4 @@ swift build -c release
 
 ## 📄 License
 
-[MIT](LICENSE) © 2026 chong.huan
+[MIT](LICENSE) © 2026
