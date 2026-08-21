@@ -37,6 +37,22 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 自定义交易时段(开启后按自定义时段判断开收盘,否则用市场默认)
+    @Published var customSessionsEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(customSessionsEnabled, forKey: "customSessionsEnabled")
+        }
+    }
+
+    /// 自定义交易时段列表(分钟数,市场本地时间;JSON 持久化)
+    @Published var customSessions: [SessionRange] {
+        didSet {
+            if let data = try? JSONEncoder().encode(customSessions) {
+                UserDefaults.standard.set(data, forKey: "customSessions")
+            }
+        }
+    }
+
     /// 配色方案(默认国际:绿涨红跌;旧版「红涨绿跌」开关自动迁移)
     @Published var colorPreset: ColorPreset {
         didSet {
@@ -109,10 +125,18 @@ final class QuoteModel: ObservableObject {
 
     init() {
         let defaults = UserDefaults.standard
-        symbol = defaults.string(forKey: "symbol") ?? "AAPL"
+        let initialSymbol = defaults.string(forKey: "symbol") ?? "AAPL"
+        symbol = initialSymbol
         symbolHistory = defaults.stringArray(forKey: "symbolHistory") ?? []
         refreshInterval = defaults.object(forKey: "refreshInterval") as? Int ?? 10
         refreshOnlyInSession = defaults.object(forKey: "refreshOnlyInSession") as? Bool ?? true
+        customSessionsEnabled = defaults.bool(forKey: "customSessionsEnabled")
+        if let data = defaults.data(forKey: "customSessions"),
+           let saved = try? JSONDecoder().decode([SessionRange].self, from: data) {
+            customSessions = saved
+        } else {
+            customSessions = Market.detect(from: initialSymbol).defaultSessionRanges
+        }
         let provider = QuoteProvider(rawValue: defaults.string(forKey: "dataSource") ?? "") ?? .yahoo
         selectedProvider = provider
         activeProvider = provider
@@ -176,7 +200,8 @@ final class QuoteModel: ObservableObject {
     }
 
     private func updateMarketState() {
-        marketOpen = Market.detect(from: symbol).isOpen()
+        let market = Market.detect(from: symbol)
+        marketOpen = market.isOpen(at: Date(), customSessions: customSessionsEnabled ? customSessions : nil)
     }
 
     /// 优先用所选数据源;连续失败 2 次自动切到备用源;降级期间每轮尝试恢复所选源

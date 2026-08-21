@@ -1,5 +1,12 @@
 import Foundation
 
+/// 自定义交易时段:一个开收盘区间(市场本地时间的分钟数)
+struct SessionRange: Codable, Equatable {
+    var startMinute: Int
+    var endMinute: Int
+    var range: ClosedRange<Int> { startMinute...endMinute }
+}
+
 /// 交易时段判断:按股票所属市场的本地时间判断是否处于开盘时间
 /// A股/港股:北京时间(UTC+8);美股:美东时间(含夏令时,由时区自动处理)
 /// 注:未包含法定节假日日历,节假日视为开盘日
@@ -16,7 +23,7 @@ enum Market: Int {
         }
     }
 
-    /// 交易时段区间(市场本地时间,分钟数:小时×60+分钟)
+    /// 默认交易时段区间(市场本地时间,分钟数:小时×60+分钟)
     var sessions: [ClosedRange<Int>] {
         switch self {
         case .cn: return [570...690, 780...900]   // 09:30-11:30, 13:00-15:00
@@ -25,12 +32,21 @@ enum Market: Int {
         }
     }
 
+    /// 默认交易时段(供「自定义交易时段」初始值)
+    var defaultSessionRanges: [SessionRange] {
+        sessions.map { SessionRange(startMinute: $0.lowerBound, endMinute: $0.upperBound) }
+    }
+
     /// 当前是否处于交易时段(周一至周五 + 时段内)
-    func isOpen(at date: Date = Date()) -> Bool {
+    /// 传 customSessions 时按自定义时段判断,否则用市场默认时段
+    func isOpen(at date: Date = Date(), customSessions: [SessionRange]? = nil) -> Bool {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = timeZone
         guard (2...6).contains(cal.component(.weekday, from: date)) else { return false }
         let minutes = cal.component(.hour, from: date) * 60 + cal.component(.minute, from: date)
+        if let custom = customSessions, !custom.isEmpty {
+            return custom.contains { $0.range.contains(minutes) }
+        }
         return sessions.contains { $0.contains(minutes) }
     }
 

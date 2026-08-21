@@ -129,6 +129,9 @@ struct SettingsView: View {
     @State private var draftEnableFallback = true
     @State private var draftRefreshInterval = 10
     @State private var draftRefreshOnlyInSession = true
+    @State private var draftCustomSessionsEnabled = false
+    /// 自定义时段文本(每行 [开始, 结束],格式 HH:mm)
+    @State private var draftSessionTexts: [[String]] = []
     @State private var draftMenuBarFormat: MenuBarFormat = .codePrice
     @State private var draftMenuBarTemplate = ""
     @State private var draftDisplayName = ""
@@ -225,6 +228,52 @@ struct SettingsView: View {
             Toggle("仅交易时段自动刷新", isOn: $draftRefreshOnlyInSession)
                 .font(.caption)
 
+            Toggle("自定义交易时段", isOn: Binding(
+                get: { draftCustomSessionsEnabled },
+                set: { on in
+                    draftCustomSessionsEnabled = on
+                    if on && draftSessionTexts.isEmpty {
+                        // 首次开启:以当前股票所属市场的默认时段为初始值
+                        draftSessionTexts = Market.detect(from: model.symbol).defaultSessionRanges.map {
+                            [Self.formatMinute($0.startMinute), Self.formatMinute($0.endMinute)]
+                        }
+                    }
+                }
+            ))
+            .font(.caption)
+
+            if draftCustomSessionsEnabled {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(draftSessionTexts.indices, id: \.self) { i in
+                        HStack(spacing: 6) {
+                            TextField("09:30", text: $draftSessionTexts[i][0])
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 60)
+                            Text("–")
+                                .foregroundStyle(.secondary)
+                            TextField("15:00", text: $draftSessionTexts[i][1])
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 60)
+                            Button {
+                                draftSessionTexts.remove(at: i)
+                            } label: {
+                                Image(systemName: "minus.circle")
+                                    .foregroundStyle(.red)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .font(.caption)
+                    }
+                    Button {
+                        draftSessionTexts.append(["09:30", "15:00"])
+                    } label: {
+                        Label("添加时段", systemImage: "plus.circle")
+                    }
+                    .buttonStyle(.plain)
+                    .font(.caption)
+                }
+            }
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text("菜单栏格式")
@@ -283,6 +332,10 @@ struct SettingsView: View {
         draftEnableFallback = model.enableFallback
         draftRefreshInterval = model.refreshInterval
         draftRefreshOnlyInSession = model.refreshOnlyInSession
+        draftCustomSessionsEnabled = model.customSessionsEnabled
+        draftSessionTexts = model.customSessions.map {
+            [Self.formatMinute($0.startMinute), Self.formatMinute($0.endMinute)]
+        }
         draftMenuBarFormat = model.menuBarFormat
         draftMenuBarTemplate = model.menuBarTemplate
         draftDisplayName = model.displayName
@@ -299,6 +352,24 @@ struct SettingsView: View {
         model.enableFallback = draftEnableFallback
         model.refreshInterval = draftRefreshInterval
         model.refreshOnlyInSession = draftRefreshOnlyInSession
+        if draftCustomSessionsEnabled {
+            // 校验所有时段格式,全部合法才写入
+            var parsed: [SessionRange] = []
+            var valid = true
+            for row in draftSessionTexts {
+                guard row.count == 2,
+                      let start = Self.parseMinute(row[0]),
+                      let end = Self.parseMinute(row[1]) else {
+                    valid = false
+                    break
+                }
+                parsed.append(SessionRange(startMinute: start, endMinute: end))
+            }
+            if valid {
+                model.customSessions = parsed
+            }
+        }
+        model.customSessionsEnabled = draftCustomSessionsEnabled
         model.menuBarFormat = draftMenuBarFormat
         model.menuBarTemplate = draftMenuBarTemplate
         model.displayName = draftDisplayName
@@ -307,5 +378,21 @@ struct SettingsView: View {
         model.downColor = draftDownColor
         model.flatColor = draftFlatColor
         onClose()
+    }
+
+    // MARK: 时间文本解析
+
+    /// "HH:mm" → 分钟数(0-1439)
+    private static func parseMinute(_ text: String) -> Int? {
+        let parts = text.split(separator: ":").map { String($0) }
+        guard parts.count == 2,
+              let h = Int(parts[0]), let m = Int(parts[1]),
+              (0...23).contains(h), (0...59).contains(m) else { return nil }
+        return h * 60 + m
+    }
+
+    /// 分钟数 → "HH:mm"
+    private static func formatMinute(_ minute: Int) -> String {
+        String(format: "%02d:%02d", minute / 60, minute % 60)
     }
 }
