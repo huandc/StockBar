@@ -9,6 +9,8 @@ final class QuoteModel: ObservableObject {
     @Published private(set) var quote: Quote?
     @Published private(set) var lastUpdated: Date?
     @Published private(set) var errorMessage: String?
+    /// 当前股票所属市场是否处于开盘时间(用于「仅交易时段自动刷新」)
+    @Published private(set) var marketOpen = true
 
     // MARK: 设置(自动持久化到 UserDefaults)
 
@@ -25,6 +27,13 @@ final class QuoteModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(refreshInterval, forKey: "refreshInterval")
             restartTimer()
+        }
+    }
+
+    /// 仅交易时段自动刷新(默认开启;休市时暂停定时刷新,手动刷新不受影响)
+    @Published var refreshOnlyInSession: Bool {
+        didSet {
+            UserDefaults.standard.set(refreshOnlyInSession, forKey: "refreshOnlyInSession")
         }
     }
 
@@ -103,6 +112,7 @@ final class QuoteModel: ObservableObject {
         symbol = defaults.string(forKey: "symbol") ?? "AAPL"
         symbolHistory = defaults.stringArray(forKey: "symbolHistory") ?? []
         refreshInterval = defaults.object(forKey: "refreshInterval") as? Int ?? 10
+        refreshOnlyInSession = defaults.object(forKey: "refreshOnlyInSession") as? Bool ?? true
         let provider = QuoteProvider(rawValue: defaults.string(forKey: "dataSource") ?? "") ?? .yahoo
         selectedProvider = provider
         activeProvider = provider
@@ -143,6 +153,7 @@ final class QuoteModel: ObservableObject {
     // MARK: 刷新
 
     func refresh() async {
+        updateMarketState()
         let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             errorMessage = "请输入股票代码"
@@ -155,6 +166,17 @@ final class QuoteModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// 定时刷新入口:开启「仅交易时段自动刷新」且休市时跳过(手动刷新不受影响)
+    func timedRefresh() {
+        updateMarketState()
+        guard !(refreshOnlyInSession && !marketOpen) else { return }
+        Task { await refresh() }
+    }
+
+    private func updateMarketState() {
+        marketOpen = Market.detect(from: symbol).isOpen()
     }
 
     /// 优先用所选数据源;连续失败 2 次自动切到备用源;降级期间每轮尝试恢复所选源
@@ -191,12 +213,12 @@ final class QuoteModel: ObservableObject {
         let interval = max(3, refreshInterval)
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(interval), repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.startRefresh()
+                self?.timedRefresh()
             }
         }
     }
 
-    /// 供 UI 调用的无返回值刷新入口
+    /// 供 UI 调用的无返回值刷新入口(手动刷新,不受交易时段限制)
     func startRefresh() {
         Task { await refresh() }
     }

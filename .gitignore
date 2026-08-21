@@ -7,3 +7,7 @@
 # 日志与临时文件
 *.log
 *.tmp
+
+# IDE
+.idea/
+.vscode/
