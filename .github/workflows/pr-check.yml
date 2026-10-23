@@ -18,6 +18,9 @@ jobs:
       - name: 编译检查
         run: swift build
 
+      - name: 单元测试
+        run: ./scripts/test.sh
+
       - name: PR 标题符合 Conventional Commits
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

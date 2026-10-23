@@ -5,7 +5,7 @@
 
 ## P0 — 质量地基
 
-- [ ] **补单元测试目标**：新增 `Tests/StockBarTests`（swift-testing），覆盖纯逻辑模块：
+- [x] **补单元测试目标**：新增 `Tests/StockBarTests`（swift-testing），覆盖纯逻辑模块：
   - `SymbolMapper.swift`（55 行）：代码转换、交易所后缀、大小写、非法输入
   - `MarketSession.swift`（60 行）：交易时段判定、跨日、周末、边界分钟
   - `DisplayFormat.swift`（40 行）：价格/涨跌幅格式化、小数位、隐藏逻辑
@@ -33,3 +33,4 @@
 
 - [x] 2026-08-14 初版：菜单栏展示、多数据源（Yahoo / 东方财富）、格式与配色可配置
 - [x] 2026-08-21 仅交易时段自动刷新；交易时段可配置
+- [x] 2026-10-23 新增 `Tests/StockBarTests`（swift-testing，23 个用例 / 4 个 suite）与 `scripts/test.sh`，CI 增加单元测试步骤
