@@ -6,25 +6,25 @@ struct YahooProvider: QuoteProviding {
     var id: String { "yahoo" }
     var displayName: String { "Yahoo Finance" }
 
+    private let client: QuoteHTTPClient
+
+    init(client: QuoteHTTPClient = QuoteHTTPClient()) {
+        self.client = client
+    }
+
     func fetch(symbol: String) async throws -> Quote {
         let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
         let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? trimmed
         let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(encoded)?interval=1d&range=1d")!
         var request = URLRequest(url: url)
-        request.timeoutInterval = 10
+        request.timeoutInterval = URLSessionTransport.requestTimeout
         request.setValue(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
             forHTTPHeaderField: "User-Agent"
         )
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw FetchError.http(-1)
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            throw FetchError.http(http.statusCode)
-        }
+        let data = try await client.data(for: request, label: "yahoo \(trimmed)")
         return try Self.parse(data: data, symbol: trimmed)
     }
 

@@ -188,7 +188,9 @@ final class QuoteModel: ObservableObject {
             errorMessage = nil
             lastUpdated = Date()
         } catch {
-            errorMessage = error.localizedDescription
+            let fetchError = FetchError.map(error)
+            QuoteLog.fetch.error("刷新失败 symbol=\(trimmed, privacy: .public) reason=\(fetchError.logReason, privacy: .public)")
+            errorMessage = fetchError.localizedDescription
         }
     }
 
@@ -210,10 +212,15 @@ final class QuoteModel: ObservableObject {
         if activeProvider != selectedProvider {
             do {
                 let q = try await selectedProvider.provider.fetch(symbol: symbol)
+                let primaryName = selectedProvider.displayName
+                QuoteLog.fallback.notice("主数据源恢复:\(primaryName, privacy: .public)")
                 activeProvider = selectedProvider
                 consecutiveFailures = 0
                 return q
             } catch {
+                let reason = FetchError.map(error).logReason
+                let fallbackName = activeProvider.displayName
+                QuoteLog.fallback.notice("主数据源仍不可用 reason=\(reason, privacy: .public),继续使用 \(fallbackName, privacy: .public)")
                 return try await activeProvider.provider.fetch(symbol: symbol)
             }
         }
@@ -223,11 +230,18 @@ final class QuoteModel: ObservableObject {
             consecutiveFailures = 0
             return q
         } catch {
-            guard enableFallback else { throw error }
+            let fetchError = FetchError.map(error)
+            let currentProviderName = activeProvider.displayName
+            guard enableFallback else { throw fetchError }
             consecutiveFailures += 1
-            guard consecutiveFailures >= 2 else { throw error }
+            guard consecutiveFailures >= 2 else {
+                QuoteLog.fallback.notice("\(currentProviderName, privacy: .public) 失败(\(fetchError.logReason, privacy: .public)),连续失败 2 次后切换备用源")
+                throw fetchError
+            }
+            let previous = activeProvider.displayName
             consecutiveFailures = 0
             let backup: QuoteProvider = activeProvider == .yahoo ? .eastmoney : .yahoo
+            QuoteLog.fallback.notice("切换数据源 \(previous, privacy: .public) → \(backup.displayName, privacy: .public) reason=\(fetchError.logReason, privacy: .public)")
             activeProvider = backup
             return try await backup.provider.fetch(symbol: symbol)
         }
