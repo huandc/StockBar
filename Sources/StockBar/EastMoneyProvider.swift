@@ -12,8 +12,16 @@ struct EastMoneyProvider: QuoteProviding {
     var id: String { "eastmoney" }
     var displayName: String { "东方财富" }
 
+    private let client: QuoteHTTPClient
+
+    init(client: QuoteHTTPClient = QuoteHTTPClient()) {
+        self.client = client
+    }
+
     private static let baseURL = "https://push2.eastmoney.com/api/qt/stock/get"
     private static let ulistURL = "https://push2.eastmoney.com/api/qt/ulist.np/get"
+    /// 备用路径已是最后一层,不再重试,避免重试叠加把一次刷新拖到几十秒
+    private static let noRetryPolicy = RetryPolicy(maxAttempts: 1)
 
     func fetch(symbol: String) async throws -> Quote {
         let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -26,6 +34,8 @@ struct EastMoneyProvider: QuoteProviding {
         do {
             return try await fetchSingle(secid: secid, market: market, symbol: trimmed)
         } catch {
+            let reason = FetchError.map(error).logReason
+            QuoteLog.fetch.notice("eastmoney \(trimmed, privacy: .public) 主路径失败 reason=\(reason, privacy: .public),降级到 ulist 接口")
             return try await fetchUlist(secid: secid, market: market, symbol: trimmed)
         }
     }
@@ -35,7 +45,7 @@ struct EastMoneyProvider: QuoteProviding {
     private func fetchSingle(secid: String, market: Int, symbol: String) async throws -> Quote {
         let fields = "f43,f57,f58,f59,f60,f86,f107,f169"
         let url = URL(string: "\(Self.baseURL)?secid=\(secid)&fields=\(fields)")!
-        let data = try await getData(from: url)
+        let data = try await getData(from: url, label: "eastmoney.single \(symbol)")
 
         let response: StockGetResponse
         do {
@@ -84,7 +94,11 @@ struct EastMoneyProvider: QuoteProviding {
     private func fetchUlist(secid: String, market: Int, symbol: String) async throws -> Quote {
         let fields = "f2,f4,f12,f13,f14"
         let url = URL(string: "\(Self.ulistURL)?secids=\(secid)&fields=\(fields)")!
-        let data = try await getData(from: url)
+        let data = try await getData(
+            from: url,
+            label: "eastmoney.ulist \(symbol)",
+            policy: Self.noRetryPolicy
+        )
 
         let response: UlistResponse
         do {
@@ -128,22 +142,18 @@ struct EastMoneyProvider: QuoteProviding {
 
     // MARK: - 通用请求
 
-    private func getData(from url: URL) async throws -> Data {
+    private func getData(
+        from url: URL,
+        label: String,
+        policy: RetryPolicy? = nil
+    ) async throws -> Data {
         var request = URLRequest(url: url)
-        request.timeoutInterval = 10
+        request.timeoutInterval = URLSessionTransport.requestTimeout
         request.setValue(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
             forHTTPHeaderField: "User-Agent"
         )
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw FetchError.http(-1)
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            throw FetchError.http(http.statusCode)
-        }
-        return data
+        return try await client.data(for: request, label: label, policy: policy)
     }
 }
