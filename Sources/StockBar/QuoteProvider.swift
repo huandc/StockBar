@@ -41,6 +41,19 @@ enum FetchError: LocalizedError, Equatable {
         }
     }
 
+    /// 面向用户的原因短句(设置页展示数据源状态时使用,比 errorDescription 更短)
+    var userFacingReason: String {
+        switch self {
+        case .http(429):                        return "请求过于频繁"
+        case .http(let code) where code >= 500: return "服务端错误 \(code)"
+        case .http(let code):                   return "HTTP \(code)"
+        case .api:                              return "接口返回异常"
+        case .noData:                           return "无有效行情数据"
+        case .timeout:                          return "请求超时"
+        case .network:                          return "网络不可用"
+        }
+    }
+
     /// 把 URLSession/URLError 归一为 FetchError,便于重试判断与日志归类
     static func map(_ error: Error) -> FetchError {
         if let fetchError = error as? FetchError { return fetchError }

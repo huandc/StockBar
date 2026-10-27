@@ -79,7 +79,9 @@ final class QuoteModel: ObservableObject {
     @Published var selectedProvider: QuoteProvider {
         didSet {
             UserDefaults.standard.set(selectedProvider.rawValue, forKey: "dataSource")
-            activeProvider = selectedProvider // 用户切换数据源时重置当前生效源
+            sourceStatus.selected = selectedProvider
+            sourceStatus.active = selectedProvider // 用户切换数据源时重置当前生效源
+            sourceStatus.consecutiveFailures = 0
             restartTimer()
             Task { await refresh() }
         }
@@ -92,8 +94,14 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 数据源健康状态:当前生效源、最近一次自动切换原因、连续失败次数
+    @Published private(set) var sourceStatus: SourceStatus
+
     /// 当前实际生效的数据源(开启降级后可能与 selectedProvider 不同)
-    @Published private(set) var activeProvider: QuoteProvider
+    var activeProvider: QuoteProvider { sourceStatus.active }
+
+    /// 设置页展示的数据源状态说明
+    var sourceStatusText: String { sourceStatus.summary() }
 
     /// 菜单栏显示格式(默认代码 + 价格,保持现状)
     @Published var menuBarFormat: MenuBarFormat {
@@ -121,7 +129,6 @@ final class QuoteModel: ObservableObject {
 
     private static let maxHistoryCount = 10
     private var timer: Timer?
-    private var consecutiveFailures = 0
 
     init() {
         let defaults = UserDefaults.standard
@@ -139,7 +146,7 @@ final class QuoteModel: ObservableObject {
         }
         let provider = QuoteProvider(rawValue: defaults.string(forKey: "dataSource") ?? "") ?? .yahoo
         selectedProvider = provider
-        activeProvider = provider
+        sourceStatus = SourceStatus(selected: provider, active: provider)
         enableFallback = defaults.object(forKey: "enableFallback") as? Bool ?? true
         menuBarFormat = MenuBarFormat(rawValue: defaults.string(forKey: "menuBarFormat") ?? "") ?? .codePrice
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
@@ -206,45 +213,63 @@ final class QuoteModel: ObservableObject {
         marketOpen = market.isOpen(at: Date(), customSessions: customSessionsEnabled ? customSessions : nil)
     }
 
-    /// 优先用所选数据源;连续失败 2 次自动切到备用源;降级期间每轮尝试恢复所选源
+    /// 优先用所选数据源;连续失败 2 次自动切到备用源;降级期间每轮尝试恢复所选源。
+    /// 每次切换都会记入 `sourceStatus`,供设置页展示与日志排查。
     private func fetchWithFallback(_ symbol: String) async throws -> Quote {
         // 降级状态:每轮先尝试所选源,成功即切回;失败继续用备用源
-        if activeProvider != selectedProvider {
+        if sourceStatus.isDegraded {
             do {
                 let q = try await selectedProvider.provider.fetch(symbol: symbol)
                 let primaryName = selectedProvider.displayName
                 QuoteLog.fallback.notice("主数据源恢复:\(primaryName, privacy: .public)")
-                activeProvider = selectedProvider
-                consecutiveFailures = 0
+                sourceStatus.active = selectedProvider
+                sourceStatus.consecutiveFailures = 0
                 return q
             } catch {
                 let reason = FetchError.map(error).logReason
                 let fallbackName = activeProvider.displayName
                 QuoteLog.fallback.notice("主数据源仍不可用 reason=\(reason, privacy: .public),继续使用 \(fallbackName, privacy: .public)")
-                return try await activeProvider.provider.fetch(symbol: symbol)
+                let q = try await activeProvider.provider.fetch(symbol: symbol)
+                markSuccess()
+                return q
             }
         }
 
         do {
             let q = try await activeProvider.provider.fetch(symbol: symbol)
-            consecutiveFailures = 0
+            markSuccess()
             return q
         } catch {
             let fetchError = FetchError.map(error)
             let currentProviderName = activeProvider.displayName
             guard enableFallback else { throw fetchError }
-            consecutiveFailures += 1
-            guard consecutiveFailures >= 2 else {
-                QuoteLog.fallback.notice("\(currentProviderName, privacy: .public) 失败(\(fetchError.logReason, privacy: .public)),连续失败 2 次后切换备用源")
+            sourceStatus.consecutiveFailures += 1
+            guard sourceStatus.consecutiveFailures >= SourceStatus.failureThreshold else {
+                let failCount = sourceStatus.consecutiveFailures
+                QuoteLog.fallback.notice("\(currentProviderName, privacy: .public) 失败(\(fetchError.logReason, privacy: .public)),连续失败 \(failCount) 次,\(SourceStatus.failureThreshold) 次后切换备用源")
                 throw fetchError
             }
-            let previous = activeProvider.displayName
-            consecutiveFailures = 0
-            let backup: QuoteProvider = activeProvider == .yahoo ? .eastmoney : .yahoo
-            QuoteLog.fallback.notice("切换数据源 \(previous, privacy: .public) → \(backup.displayName, privacy: .public) reason=\(fetchError.logReason, privacy: .public)")
-            activeProvider = backup
-            return try await backup.provider.fetch(symbol: symbol)
+            let previous = activeProvider
+            let backup: QuoteProvider = previous == .yahoo ? .eastmoney : .yahoo
+            QuoteLog.fallback.notice("切换数据源 \(previous.displayName, privacy: .public) → \(backup.displayName, privacy: .public) reason=\(fetchError.logReason, privacy: .public)")
+            sourceStatus.consecutiveFailures = 0
+            sourceStatus.active = backup
+            sourceStatus.lastSwitch = SourceStatus.SwitchRecord(
+                from: previous,
+                to: backup,
+                reason: fetchError.userFacingReason,
+                at: Date()
+            )
+            let q = try await backup.provider.fetch(symbol: symbol)
+            markSuccess()
+            return q
         }
+    }
+
+    /// 刷新成功:清零失败计数并记录成功时间
+    private func markSuccess() {
+        sourceStatus.consecutiveFailures = 0
+        sourceStatus.lastSuccessAt = Date()
     }
 
     private func restartTimer() {
