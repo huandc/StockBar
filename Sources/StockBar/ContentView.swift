@@ -206,9 +206,17 @@ struct SettingsView: View {
                 }
                 Toggle("主源失败自动切换备用源", isOn: $draftEnableFallback)
                     .font(.caption)
-                Text("当前来源:\(model.activeProvider.displayName)")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                // 数据源状态:降级时说明「谁代班、为什么切、什么时候切的」
+                HStack(spacing: 4) {
+                    Image(systemName: model.sourceStatus.isDegraded ? "arrow.triangle.2.circlepath" : "checkmark.circle")
+                        .font(.caption2)
+                        .foregroundStyle(model.sourceStatus.isDegraded ? .orange : .secondary)
+                    Text(model.sourceStatusText)
+                        .font(.caption2)
+                        .foregroundStyle(model.sourceStatus.isDegraded ? .secondary : .tertiary)
+                        .textSelection(.enabled)
+                }
+                .help("数据源状态：切换原因与时间来自最近一次自动降级")
             }
 
             HStack {
