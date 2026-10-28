@@ -110,6 +110,13 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 菜单栏文本最大宽度(点);0 表示不限制。超出时从开头截断,保留代码与数值
+    @Published var menuBarMaxWidth: Double {
+        didSet {
+            UserDefaults.standard.set(menuBarMaxWidth, forKey: "menuBarMaxWidth")
+        }
+    }
+
     /// 自定义模板(仅 menuBarFormat == .custom 生效)
     @Published var menuBarTemplate: String {
         didSet {
@@ -149,6 +156,7 @@ final class QuoteModel: ObservableObject {
         sourceStatus = SourceStatus(selected: provider, active: provider)
         enableFallback = defaults.object(forKey: "enableFallback") as? Bool ?? true
         menuBarFormat = MenuBarFormat(rawValue: defaults.string(forKey: "menuBarFormat") ?? "") ?? .codePrice
+        menuBarMaxWidth = defaults.object(forKey: "menuBarMaxWidth") as? Double ?? MenuBarLayout.defaultMaxWidth
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
         displayName = defaults.string(forKey: "displayName") ?? ""
         // 配色:新键 colorPreset 优先;老用户按旧开关 redUpGreenDown 迁移
@@ -297,6 +305,11 @@ final class QuoteModel: ObservableObject {
     }
 
     var menuBarText: String {
+        MenuBarLayout.fittingText(rawMenuBarText, maxWidth: menuBarMaxWidth)
+    }
+
+    /// 未裁剪的原始文本(按菜单栏格式拼装)
+    private var rawMenuBarText: String {
         let code = symbol.uppercased()
         guard let q = quote else { return "\(code) --" }
         switch menuBarFormat {

@@ -134,6 +134,7 @@ struct SettingsView: View {
     @State private var draftSessionTexts: [[String]] = []
     @State private var draftMenuBarFormat: MenuBarFormat = .codePrice
     @State private var draftMenuBarTemplate = ""
+    @State private var draftMenuBarMaxWidth = MenuBarLayout.defaultMaxWidth
     @State private var draftDisplayName = ""
     @State private var draftColorPreset: ColorPreset = .international
     @State private var draftUpColor = ColorPreset.defaultUp
@@ -302,6 +303,34 @@ struct SettingsView: View {
                 }
             }
 
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text("菜单栏最大宽度")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(draftMenuBarMaxWidth <= 0 ? "不限制" : "\(Int(draftMenuBarMaxWidth)) pt")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                Slider(value: $draftMenuBarMaxWidth, in: MenuBarLayout.widthRange, step: 10)
+                    .controlSize(.small)
+                    .disabled(draftMenuBarMaxWidth <= 0)
+                Toggle("不限制宽度(名称过长时由系统裁切)", isOn: Binding(
+                    get: { draftMenuBarMaxWidth <= 0 },
+                    set: { unlimited in
+                        draftMenuBarMaxWidth = unlimited ? MenuBarLayout.unlimited : MenuBarLayout.defaultMaxWidth
+                    }
+                ))
+                .font(.caption2)
+                .toggleStyle(.checkbox)
+                if draftMenuBarMaxWidth > 0 {
+                    Text("超出宽度时从开头截断,保留代码与价格;如「…AAPL 190.50」")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
             TextField("自定义名称(留空 = 接口名称)", text: $draftDisplayName)
                 .textFieldStyle(.roundedBorder)
                 .font(.caption)
@@ -346,6 +375,7 @@ struct SettingsView: View {
         }
         draftMenuBarFormat = model.menuBarFormat
         draftMenuBarTemplate = model.menuBarTemplate
+        draftMenuBarMaxWidth = model.menuBarMaxWidth
         draftDisplayName = model.displayName
         draftColorPreset = model.colorPreset
         draftUpColor = model.upColor
@@ -380,6 +410,7 @@ struct SettingsView: View {
         model.customSessionsEnabled = draftCustomSessionsEnabled
         model.menuBarFormat = draftMenuBarFormat
         model.menuBarTemplate = draftMenuBarTemplate
+        model.menuBarMaxWidth = draftMenuBarMaxWidth
         model.displayName = draftDisplayName
         model.colorPreset = draftColorPreset
         model.upColor = draftUpColor
