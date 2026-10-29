@@ -29,9 +29,18 @@ struct MenuBarLabel: View {
     @ObservedObject var model: QuoteModel
 
     var body: some View {
-        Text(model.menuBarText)
-            .foregroundStyle(model.menuBarColor)
-            .font(.system(size: 12, weight: .medium, design: .monospaced))
-            .fixedSize()
+        HStack(spacing: 3) {
+            // 刷新失败显示警告三角,降级期间显示循环箭头;正常时不占位
+            if let symbol = model.menuBarSymbol {
+                Image(systemName: symbol)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(model.isFailing ? Color.orange : Color.secondary)
+                    .help(model.failureSummary ?? "当前使用备用数据源")
+            }
+            Text(model.menuBarText)
+                .foregroundStyle(model.menuBarColor)
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .fixedSize()
+        }
     }
 }

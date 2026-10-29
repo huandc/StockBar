@@ -9,6 +9,12 @@ final class QuoteModel: ObservableObject {
     @Published private(set) var quote: Quote?
     @Published private(set) var lastUpdated: Date?
     @Published private(set) var errorMessage: String?
+    /// 连续刷新失败的次数(成功一次即清零,用于菜单栏异常态与面板提示)
+    @Published private(set) var consecutiveRefreshFailures = 0
+    /// 最近一次失败的用户可读原因(如「请求超时」)
+    @Published private(set) var lastFailureReason: String?
+    /// 下一次自动刷新时间(休市或未排定时为 nil)
+    @Published private(set) var nextRefreshAt: Date?
     /// 当前股票所属市场是否处于开盘时间(用于「仅交易时段自动刷新」)
     @Published private(set) var marketOpen = true
 
@@ -202,9 +208,14 @@ final class QuoteModel: ObservableObject {
             quote = try await fetchWithFallback(trimmed)
             errorMessage = nil
             lastUpdated = Date()
+            consecutiveRefreshFailures = 0
+            lastFailureReason = nil
         } catch {
             let fetchError = FetchError.map(error)
-            QuoteLog.fetch.error("刷新失败 symbol=\(trimmed, privacy: .public) reason=\(fetchError.logReason, privacy: .public)")
+            consecutiveRefreshFailures += 1
+            lastFailureReason = fetchError.userFacingReason
+            let failCount = consecutiveRefreshFailures
+            QuoteLog.fetch.error("刷新失败 symbol=\(trimmed, privacy: .public) reason=\(fetchError.logReason, privacy: .public) failures=\(failCount, privacy: .public)")
             errorMessage = fetchError.localizedDescription
         }
     }
@@ -212,7 +223,11 @@ final class QuoteModel: ObservableObject {
     /// 定时刷新入口:开启「仅交易时段自动刷新」且休市时跳过(手动刷新不受影响)
     func timedRefresh() {
         updateMarketState()
-        guard !(refreshOnlyInSession && !marketOpen) else { return }
+        guard !(refreshOnlyInSession && !marketOpen) else {
+            nextRefreshAt = nil
+            return
+        }
+        nextRefreshAt = Date().addingTimeInterval(TimeInterval(max(3, refreshInterval)))
         Task { await refresh() }
     }
 
@@ -283,6 +298,7 @@ final class QuoteModel: ObservableObject {
     private func restartTimer() {
         timer?.invalidate()
         let interval = max(3, refreshInterval)
+        nextRefreshAt = Date().addingTimeInterval(TimeInterval(interval))
         timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(interval), repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.timedRefresh()
@@ -331,6 +347,29 @@ final class QuoteModel: ObservableObject {
                 changePercent: q.changePercent
             )
         }
+    }
+
+    /// 是否处于失败状态(菜单栏显示异常图标)
+    var isFailing: Bool { consecutiveRefreshFailures > 0 }
+
+    /// 菜单栏异常/降级图标;正常时为 nil
+    var menuBarSymbol: String? {
+        RefreshStatus.menuBarSymbol(isFailing: isFailing, isDegraded: sourceStatus.isDegraded)
+    }
+
+    /// 面板里的刷新计划说明(下次刷新 / 失败后重试 / 休市暂停)
+    var nextRefreshText: String? {
+        RefreshStatus.nextRefreshText(
+            next: nextRefreshAt,
+            now: Date(),
+            isPaused: refreshOnlyInSession && !marketOpen,
+            isFailing: isFailing
+        )
+    }
+
+    /// 失败摘要:连续失败次数 + 最近原因
+    var failureSummary: String? {
+        RefreshStatus.failureText(consecutiveFailures: consecutiveRefreshFailures, reason: lastFailureReason)
     }
 
     var menuBarColor: Color {
