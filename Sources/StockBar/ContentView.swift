@@ -83,11 +83,24 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
         }
 
+        if let summary = model.failureSummary {
+            Text(summary)
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .multilineTextAlignment(.center)
+        }
+
         if let err = model.errorMessage {
             Text(err)
                 .font(.caption)
                 .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
+        }
+
+        if let plan = model.nextRefreshText {
+            Text(plan)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
 
         if model.refreshOnlyInSession && !model.marketOpen {
