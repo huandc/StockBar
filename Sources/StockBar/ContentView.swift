@@ -147,6 +147,9 @@ struct SettingsView: View {
     @State private var draftSessionTexts: [[String]] = []
     @State private var draftMenuBarFormat: MenuBarFormat = .codePrice
     @State private var draftMenuBarTemplate = ""
+    @State private var draftWatchlistText: String = ""
+    @State private var draftRotationEnabled: Bool = false
+    @State private var draftRotationInterval: Int = 10
     @State private var draftMenuBarMaxWidth = MenuBarLayout.defaultMaxWidth
     @State private var draftDisplayName = ""
     @State private var draftColorPreset: ColorPreset = .international
@@ -344,6 +347,41 @@ struct SettingsView: View {
                 }
             }
 
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("菜单栏轮显自选列表", isOn: $draftRotationEnabled)
+                    .font(.caption)
+                if draftRotationEnabled {
+                    TextField("自选代码,逗号/换行分隔,如 AAPL, 0700.HK, MSFT", text: $draftWatchlistText)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                    HStack {
+                        Text("切换间隔")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Picker("切换间隔", selection: $draftRotationInterval) {
+                            Text("5秒").tag(5)
+                            Text("10秒").tag(10)
+                            Text("30秒").tag(30)
+                            Text("60秒").tag(60)
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        .controlSize(.small)
+                        Spacer()
+                        if model.isRotating {
+                            Text("正在显示 \(model.displayedSymbol)")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    if let hint = rotationHint {
+                        Text(hint)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+
             TextField("自定义名称(留空 = 接口名称)", text: $draftDisplayName)
                 .textFieldStyle(.roundedBorder)
                 .font(.caption)
@@ -374,6 +412,17 @@ struct SettingsView: View {
         }
     }
 
+    /// 轮显输入校验提示
+    private var rotationHint: String? {
+        let parsed = WatchlistRotation.normalize(draftWatchlistText)
+        if parsed.isEmpty { return "至少填写两个符号才会轮显;留空则沿用上方单只股票" }
+        if parsed.count == 1 { return "当前只有 1 个符号,不会轮显;再加一个即可" }
+        if parsed.count > 1 && parsed.count == WatchlistRotation.maxSymbols {
+            return "最多 \(WatchlistRotation.maxSymbols) 个符号,超出的已忽略"
+        }
+        return "共 \(parsed.count) 个符号,每 \(draftRotationInterval) 秒切换一次"
+    }
+
     // MARK: 草稿与保存
 
     private func loadDrafts() {
@@ -389,6 +438,9 @@ struct SettingsView: View {
         draftMenuBarFormat = model.menuBarFormat
         draftMenuBarTemplate = model.menuBarTemplate
         draftMenuBarMaxWidth = model.menuBarMaxWidth
+        draftWatchlistText = WatchlistRotation.join(model.watchlist)
+        draftRotationEnabled = model.rotationEnabled
+        draftRotationInterval = model.rotationInterval
         draftDisplayName = model.displayName
         draftColorPreset = model.colorPreset
         draftUpColor = model.upColor
@@ -423,6 +475,9 @@ struct SettingsView: View {
         model.customSessionsEnabled = draftCustomSessionsEnabled
         model.menuBarFormat = draftMenuBarFormat
         model.menuBarTemplate = draftMenuBarTemplate
+        model.rotationInterval = draftRotationInterval
+        model.updateWatchlist(from: draftWatchlistText)
+        model.rotationEnabled = draftRotationEnabled
         model.menuBarMaxWidth = draftMenuBarMaxWidth
         model.displayName = draftDisplayName
         model.colorPreset = draftColorPreset
