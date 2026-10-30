@@ -140,8 +140,57 @@ final class QuoteModel: ObservableObject {
     /// 最近输入的股票代码(供设置面板快捷选择),最新的在最前
     @Published private(set) var symbolHistory: [String]
 
+    // MARK: 多符号轮显
+
+    /// 自选列表(菜单栏轮显用)
+    @Published private(set) var watchlist: [String] {
+        didSet {
+            UserDefaults.standard.set(watchlist, forKey: "watchlist")
+        }
+    }
+
+    /// 是否在菜单栏轮显自选列表
+    @Published var rotationEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(rotationEnabled, forKey: "rotationEnabled")
+            rotationIndex = 0
+            restartRotationTimer()
+            Task { await refresh() }
+        }
+    }
+
+    /// 轮显间隔(秒),只影响切换显示,不额外拉行情
+    @Published var rotationInterval: Int {
+        didSet {
+            UserDefaults.standard.set(rotationInterval, forKey: "rotationInterval")
+            restartRotationTimer()
+        }
+    }
+
+    /// 当前轮显到第几个,越界时由 `displayedSymbol` 收敛
+    @Published private(set) var rotationIndex = 0
+
+    /// 轮显时各符号的最近行情(避免每次切换都等一次网络请求)
+    @Published private(set) var watchQuotes: [String: Quote] = [:]
+
+    /// 实际参与轮显的符号;为空表示沿用单符号模式
+    var rotationSymbols: [String] {
+        WatchlistRotation.rotationSymbols(watchlist: watchlist, enabled: rotationEnabled)
+    }
+
+    /// 菜单栏当前展示的符号
+    var displayedSymbol: String {
+        let list = rotationSymbols
+        guard !list.isEmpty else { return symbol.uppercased() }
+        return list[WatchlistRotation.clampIndex(rotationIndex, count: list.count)]
+    }
+
+    /// 是否正在轮显(菜单栏出现多个符号时才算)
+    var isRotating: Bool { !rotationSymbols.isEmpty }
+
     private static let maxHistoryCount = 10
     private var timer: Timer?
+    private var rotationTimer: Timer?
 
     init() {
         let defaults = UserDefaults.standard
@@ -165,6 +214,9 @@ final class QuoteModel: ObservableObject {
         menuBarMaxWidth = defaults.object(forKey: "menuBarMaxWidth") as? Double ?? MenuBarLayout.defaultMaxWidth
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
         displayName = defaults.string(forKey: "displayName") ?? ""
+        watchlist = defaults.stringArray(forKey: "watchlist") ?? []
+        rotationEnabled = defaults.object(forKey: "rotationEnabled") as? Bool ?? false
+        rotationInterval = defaults.object(forKey: "rotationInterval") as? Int ?? 10
         // 配色:新键 colorPreset 优先;老用户按旧开关 redUpGreenDown 迁移
         if let presetRaw = defaults.string(forKey: "colorPreset") {
             colorPreset = ColorPreset(rawValue: presetRaw) ?? .international
@@ -175,6 +227,7 @@ final class QuoteModel: ObservableObject {
         downColor = RGBColor.decode(defaults.data(forKey: "downColorRGB") ?? Data())?.color ?? ColorPreset.defaultDown
         flatColor = RGBColor.decode(defaults.data(forKey: "flatColorRGB") ?? Data())?.color ?? ColorPreset.defaultFlat
         restartTimer()
+        restartRotationTimer()
     }
 
     private func persistColor(_ color: Color, forKey key: String) {
@@ -199,7 +252,18 @@ final class QuoteModel: ObservableObject {
 
     func refresh() async {
         updateMarketState()
-        let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
+        let list = rotationSymbols
+        if list.isEmpty {
+            rotationIndex = 0
+            await refreshSingle(symbol)
+        } else {
+            await refreshRotation(list)
+        }
+    }
+
+    /// 单符号刷新(原有逻辑)
+    private func refreshSingle(_ rawSymbol: String) async {
+        let trimmed = rawSymbol.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             errorMessage = "请输入股票代码"
             return
@@ -220,6 +284,36 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 轮显模式:一轮把自选列表全部拉一次,菜单栏只展示当前下标对应的行情
+    private func refreshRotation(_ list: [String]) async {
+        var cache = watchQuotes
+        var failures: [String: FetchError] = [:]
+        for item in list {
+            do {
+                cache[item] = try await fetchWithFallback(item)
+            } catch {
+                failures[item] = FetchError.map(error)
+            }
+        }
+        watchQuotes = cache
+        let shown = displayedSymbol
+        if let q = cache[shown] {
+            quote = q
+            errorMessage = nil
+            lastUpdated = Date()
+            consecutiveRefreshFailures = 0
+            lastFailureReason = nil
+        } else {
+            let failure = failures[shown] ?? failures.values.first ?? .noData
+            consecutiveRefreshFailures += 1
+            lastFailureReason = failure.userFacingReason
+            errorMessage = failure.localizedDescription
+        }
+        let failedCount = failures.count
+        let total = list.count
+        QuoteLog.fetch.error("轮显刷新完成 total=\(total, privacy: .public) failed=\(failedCount, privacy: .public) shown=\(shown, privacy: .public)")
+    }
+
     /// 定时刷新入口:开启「仅交易时段自动刷新」且休市时跳过(手动刷新不受影响)
     func timedRefresh() {
         updateMarketState()
@@ -232,7 +326,7 @@ final class QuoteModel: ObservableObject {
     }
 
     private func updateMarketState() {
-        let market = Market.detect(from: symbol)
+        let market = Market.detect(from: displayedSymbol)
         marketOpen = market.isOpen(at: Date(), customSessions: customSessionsEnabled ? customSessions : nil)
     }
 
@@ -306,6 +400,39 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 切换到下一个符号(仅用缓存,不触发网络请求;行情由刷新定时器统一更新)
+    func advanceRotation() {
+        let list = rotationSymbols
+        guard !list.isEmpty else { return }
+        rotationIndex = WatchlistRotation.nextIndex(after: rotationIndex, count: list.count)
+        if let cached = watchQuotes[displayedSymbol] {
+            quote = cached
+            errorMessage = nil
+        }
+    }
+
+    /// 保存自选列表(输入框原文,逗号/分号/换行分隔均可)
+    func updateWatchlist(from raw: String) {
+        let parsed = WatchlistRotation.normalize(raw)
+        watchlist = parsed
+        rotationIndex = 0
+        restartRotationTimer()
+        Task { await refresh() }
+    }
+
+    private func restartRotationTimer() {
+        rotationTimer?.invalidate()
+        rotationTimer = nil
+        let list = rotationSymbols
+        guard !list.isEmpty else { return }
+        let interval = TimeInterval(max(3, rotationInterval))
+        rotationTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.advanceRotation()
+            }
+        }
+    }
+
     /// 供 UI 调用的无返回值刷新入口(手动刷新,不受交易时段限制)
     func startRefresh() {
         Task { await refresh() }
@@ -326,7 +453,7 @@ final class QuoteModel: ObservableObject {
 
     /// 未裁剪的原始文本(按菜单栏格式拼装)
     private var rawMenuBarText: String {
-        let code = symbol.uppercased()
+        let code = displayedSymbol
         guard let q = quote else { return "\(code) --" }
         switch menuBarFormat {
         case .price:
