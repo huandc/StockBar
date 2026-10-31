@@ -1,0 +1,104 @@
+name: Bug report / 问题反馈
+description: 菜单栏显示异常、刷新失败、崩溃等可复现的问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈!请尽量把「看到什么」和「期望什么」写清楚,附上系统版本与数据源。
+        如果是行情数据本身错误(价格对不上),也请说明是哪个市场、哪只代码。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 实际表现 / What happened
+      description: 菜单栏显示成什么样?面板里有没有错误提示或警告图标?
+      placeholder: 菜单栏显示「--」,面板提示「请求超时」,连续失败 3 次后出现橙色警告图标…
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望表现 / What did you expect
+      placeholder: 应该正常显示 305.26,而不是「--」
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      placeholder: |
+        1. 打开设置,数据源切到 Yahoo
+        2. 断开 Wi-Fi
+        3. 点「立即刷新」
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: StockBar 版本 / App version
+      description: 设置页底部或 Releases 页面的版本号
+      placeholder: v1.0.0
+    validations:
+      required: false
+
+  - type: dropdown
+    id: macos-version
+    attributes:
+      label: macOS 版本 / macOS version
+      options:
+        - macOS 26 (Tahoe)
+        - macOS 15 (Sequoia)
+        - macOS 14 (Sonoma)
+        - macOS 13 (Ventura)
+        - 其他 / Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: chip
+    attributes:
+      label: 芯片 / Chip
+      options:
+        - Apple Silicon (arm64)
+        - Intel (x86_64)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-source
+    attributes:
+      label: 数据源 / Data source
+      description: 设置页「数据源」当前选中的值
+      options:
+        - Yahoo Finance
+        - 东方财富 / EastMoney
+        - 已开启「主源失败自动切换备用源」
+        - 不确定 / Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / Logs
+      description: |
+        可选。可在「控制台.app」里过滤进程 `StockBar` 复制相关行,
+        或贴出 `log show --last 5m --predicate 'process == "StockBar"'` 的输出。
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认 / Before submitting
+      options:
+        - label: 我已经搜索过现有 Issue,确认不是重复问题
+          required: true
+        - label: 我已经看过 README 的「常见问题」
+          required: true
