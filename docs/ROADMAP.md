@@ -49,7 +49,17 @@
 
 ## P2 — 项目工程化
 
-- [ ] Issue / PR 模板、`CONTRIBUTING.md`（英文）
+- [x] Issue / PR 模板、`CONTRIBUTING.md`（英文）
+  - `.github/ISSUE_TEMPLATE/` 新增 `bug_report.yml`(浏览器式表单:实际/期望/复现步骤 + macOS 版本、芯片、数据源、
+    日志下拉与必填校验)、`feature_request.yml`(问题场景/期望做法/替代方案/涉及范围)、`config.yml`
+    (禁用空白 Issue,把使用问题与安全报告引到 README 与私密 advisory)
+  - `.github/pull_request_template.md`:概述、关联 Issue、改动类型、验证命令与结果、检查清单、截图
+  - `CONTRIBUTING.md`(英文):构建与测试(解释为何只能 `./scripts/test.sh`)、源码职责表、「把可测逻辑抽成纯函数」
+    约定、分支与 PR 规则(受保护 + `check` + squash)、Conventional Commits 表、ROADMAP 工作方式、
+    新增数据源步骤、`os.Logger` 插值与 `Package.swift` 参数顺序两个环境坑
+  - `pr-check.yml` 新增两步:校验所有 Issue 模板/工作流 YAML 可解析、校验模板含 name/description/body 且
+    body 项 type 合法;README 增加「参与贡献」段落
+  > 验收:开 Issue 时出现结构化表单;开 PR 时自动带出检查清单;模板写坏会被 CI 拦下。
 - [ ] README 英文版 + 截图
 - [ ] Homebrew Cask 发布
 - [ ] `swift-format` 配置与 CI 检查
@@ -64,3 +74,4 @@
 - [x] 2026-10-28 菜单栏宽度自适应:新增 `MenuBarLayout` 按最大宽度从开头截断(保留代码与价格),设置页加 120–400pt 滑块与不限制开关;新增 8 个用例
 - [x] 2026-10-29 刷新失败的用户提示:菜单栏失败显示橙色警告图标,面板显示连续失败原因与下次重试时间,休市提示暂停;新增 7 个用例
 - [x] 2026-10-30 多符号轮显:菜单栏按间隔轮播自选列表,每轮统一拉取并缓存,切换只读缓存;新增 8 个用例
+- [x] 2026-10-31 工程化入口:Issue 表单(问题反馈/功能建议)+ PR 模板 + 英文 CONTRIBUTING,并把模板校验接进 CI

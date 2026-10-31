@@ -21,6 +21,28 @@ jobs:
       - name: 单元测试
         run: ./scripts/test.sh
 
+      - name: 校验 Issue 模板与工作流 YAML
+        run: |
+          ruby -ryaml -e 'ARGV.each { |f| YAML.load_file(f); puts "ok: #{f}" }' \
+            .github/ISSUE_TEMPLATE/*.yml .github/workflows/*.yml
+
+      - name: Issue 模板结构完整(name/description/body)
+        run: |
+          ruby -ryaml -e '
+            ARGV.each do |f|
+              next if f.end_with?("config.yml")
+              d = YAML.load_file(f)
+              %w[name description body].each do |k|
+                abort("#{f} 缺少 #{k}") unless d[k]
+              end
+              abort("#{f} 的 body 不是数组") unless d["body"].is_a?(Array)
+              d["body"].each do |item|
+                abort("#{f} 有 format 不在允许列表: #{item["type"]}") unless
+                  %w[markdown input textarea dropdown checkboxes].include?(item["type"])
+              end
+              puts "ok: #{f}"
+            end' .github/ISSUE_TEMPLATE/*.yml
+
       - name: PR 标题符合 Conventional Commits
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

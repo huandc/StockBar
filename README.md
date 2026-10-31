@@ -62,6 +62,11 @@ swift build -c release
 - **如何退出?** 面板 →「退出」(应用无 Dock 图标)
 - **支持的系统?** macOS 13 及以上
 
+## 🤝 参与贡献
+
+欢迎 Issue 与 PR,规则见 [CONTRIBUTING.md](CONTRIBUTING.md):`main` 受保护、需过 `check` 检查、squash 合并,
+提交信息与 PR 标题遵循 Conventional Commits。
+
 ## 📄 License
 
 [MIT](LICENSE) © 2026
