@@ -62,7 +62,13 @@
   > 验收:开 Issue 时出现结构化表单;开 PR 时自动带出检查清单;模板写坏会被 CI 拦下。
 - [ ] README 英文版 + 截图
 - [ ] Homebrew Cask 发布
-- [ ] `swift-format` 配置与 CI 检查
+- [x] `swift-format` 配置与 CI 检查
+  - 新增 `.swift-format`(基于 6.3 默认配置,改 4 空格缩进、120 列、保留既有换行、不重排 import),
+    用 `xcrun swift-format format -i -r` 全量规范化一次(19 个文件,仅空白与折行)
+  - 新增 `scripts/format.sh`:默认原地格式化,`--lint` 只检查;`pr-check.yml` 增加「代码格式检查」步骤
+    (`lint --strict`),写坏格式的 PR 会被拦住
+  - CONTRIBUTING 的风格章节改为「CI 强制」并说明不要在同一个 PR 里重排无关文件
+  > 验收:本地跑 `./scripts/format.sh` 后 `git diff` 为空,CI 上 lint 严格模式通过。
 
 ## 已完成
 
@@ -75,3 +81,4 @@
 - [x] 2026-10-29 刷新失败的用户提示:菜单栏失败显示橙色警告图标,面板显示连续失败原因与下次重试时间,休市提示暂停;新增 7 个用例
 - [x] 2026-10-30 多符号轮显:菜单栏按间隔轮播自选列表,每轮统一拉取并缓存,切换只读缓存;新增 8 个用例
 - [x] 2026-10-31 工程化入口:Issue 表单(问题反馈/功能建议)+ PR 模板 + 英文 CONTRIBUTING,并把模板校验接进 CI
+- [x] 2026-11-02 接入 swift-format:统一 4 空格/120 列并全量格式化,CI 增加 lint --strict 检查与 scripts/format.sh

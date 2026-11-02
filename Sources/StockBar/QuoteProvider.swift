@@ -23,9 +23,9 @@ enum FetchError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .http(let code): return "网络错误(HTTP \(code))"
-        case .api(let msg):   return "接口错误:\(msg)"
-        case .noData:         return "未获取到行情,请检查股票代码是否有效"
-        case .timeout:        return "请求超时(网络较慢或数据源无响应)"
+        case .api(let msg): return "接口错误:\(msg)"
+        case .noData: return "未获取到行情,请检查股票代码是否有效"
+        case .timeout: return "请求超时(网络较慢或数据源无响应)"
         case .network(let msg): return "网络错误:\(msg)"
         }
     }
@@ -34,23 +34,23 @@ enum FetchError: LocalizedError, Equatable {
     var logReason: String {
         switch self {
         case .http(let code): return "http_\(code)"
-        case .api:            return "api_error"
-        case .noData:         return "parse_or_empty"
-        case .timeout:        return "timeout"
-        case .network:        return "network"
+        case .api: return "api_error"
+        case .noData: return "parse_or_empty"
+        case .timeout: return "timeout"
+        case .network: return "network"
         }
     }
 
     /// 面向用户的原因短句(设置页展示数据源状态时使用,比 errorDescription 更短)
     var userFacingReason: String {
         switch self {
-        case .http(429):                        return "请求过于频繁"
+        case .http(429): return "请求过于频繁"
         case .http(let code) where code >= 500: return "服务端错误 \(code)"
-        case .http(let code):                   return "HTTP \(code)"
-        case .api:                              return "接口返回异常"
-        case .noData:                           return "无有效行情数据"
-        case .timeout:                          return "请求超时"
-        case .network:                          return "网络不可用"
+        case .http(let code): return "HTTP \(code)"
+        case .api: return "接口返回异常"
+        case .noData: return "无有效行情数据"
+        case .timeout: return "请求超时"
+        case .network: return "网络不可用"
         }
     }
 
@@ -67,8 +67,8 @@ enum FetchError: LocalizedError, Equatable {
         case .cancelled:
             return .network("请求已取消")
         case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost,
-             .cannotConnectToHost, .dnsLookupFailed, .secureConnectionFailed,
-             .internationalRoamingOff, .dataNotAllowed:
+            .cannotConnectToHost, .dnsLookupFailed, .secureConnectionFailed,
+            .internationalRoamingOff, .dataNotAllowed:
             return .network(nsError.localizedDescription)
         default:
             return .network(nsError.localizedDescription)
@@ -92,14 +92,14 @@ enum QuoteProvider: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .yahoo:     return "Yahoo Finance"
+        case .yahoo: return "Yahoo Finance"
         case .eastmoney: return "东方财富"
         }
     }
 
     var provider: any QuoteProviding {
         switch self {
-        case .yahoo:     return YahooProvider()
+        case .yahoo: return YahooProvider()
         case .eastmoney: return EastMoneyProvider()
         }
     }

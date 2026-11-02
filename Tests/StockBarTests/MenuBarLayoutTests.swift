@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import StockBar
 
 @Suite("MenuBarLayout")
@@ -21,7 +22,7 @@ struct MenuBarLayoutTests {
 
     @Test("超宽时从开头截断,保留尾部的数值")
     func truncatesHeadKeepsTail() {
-        let text = "贵州茅台 1234.56"   // 11 字符 = 110pt
+        let text = "贵州茅台 1234.56"  // 11 字符 = 110pt
         let fitted = MenuBarLayout.fittingText(text, maxWidth: 80, measure: measure)
         #expect(fitted.hasPrefix("…"))
         #expect(fitted == "…1234.56")

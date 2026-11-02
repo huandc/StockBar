@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import StockBar
 
 @Suite("SourceStatus")
@@ -82,7 +83,7 @@ struct SourceStatusTests {
         #expect(SourceStatus.relative(date(secondsAgo: 120), now: now) == "2 分钟前")
         #expect(SourceStatus.relative(date(secondsAgo: 3 * 3600), now: now) == "3 小时前")
         let old = SourceStatus.relative(date(secondsAgo: 5 * 86_400), now: now)
-        #expect(old.count == 11) // MM-dd HH:mm
+        #expect(old.count == 11)  // MM-dd HH:mm
     }
 
     @Test("错误原因映射成用户能看懂的一句短话")

@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 /// 菜单栏点击后弹出的主面板:行情详情 + 右上角齿轮进入设置
 struct ContentView: View {
@@ -225,9 +225,11 @@ struct SettingsView: View {
                     .font(.caption)
                 // 数据源状态:降级时说明「谁代班、为什么切、什么时候切的」
                 HStack(spacing: 4) {
-                    Image(systemName: model.sourceStatus.isDegraded ? "arrow.triangle.2.circlepath" : "checkmark.circle")
-                        .font(.caption2)
-                        .foregroundStyle(model.sourceStatus.isDegraded ? .orange : .secondary)
+                    Image(
+                        systemName: model.sourceStatus.isDegraded ? "arrow.triangle.2.circlepath" : "checkmark.circle"
+                    )
+                    .font(.caption2)
+                    .foregroundStyle(model.sourceStatus.isDegraded ? .orange : .secondary)
                     Text(model.sourceStatusText)
                         .font(.caption2)
                         .foregroundStyle(model.sourceStatus.isDegraded ? .secondary : .tertiary)
@@ -253,18 +255,21 @@ struct SettingsView: View {
             Toggle("仅交易时段自动刷新", isOn: $draftRefreshOnlyInSession)
                 .font(.caption)
 
-            Toggle("自定义交易时段", isOn: Binding(
-                get: { draftCustomSessionsEnabled },
-                set: { on in
-                    draftCustomSessionsEnabled = on
-                    if on && draftSessionTexts.isEmpty {
-                        // 首次开启:以当前股票所属市场的默认时段为初始值
-                        draftSessionTexts = Market.detect(from: model.symbol).defaultSessionRanges.map {
-                            [Self.formatMinute($0.startMinute), Self.formatMinute($0.endMinute)]
+            Toggle(
+                "自定义交易时段",
+                isOn: Binding(
+                    get: { draftCustomSessionsEnabled },
+                    set: { on in
+                        draftCustomSessionsEnabled = on
+                        if on && draftSessionTexts.isEmpty {
+                            // 首次开启:以当前股票所属市场的默认时段为初始值
+                            draftSessionTexts = Market.detect(from: model.symbol).defaultSessionRanges.map {
+                                [Self.formatMinute($0.startMinute), Self.formatMinute($0.endMinute)]
+                            }
                         }
                     }
-                }
-            ))
+                )
+            )
             .font(.caption)
 
             if draftCustomSessionsEnabled {
@@ -332,12 +337,15 @@ struct SettingsView: View {
                 Slider(value: $draftMenuBarMaxWidth, in: MenuBarLayout.widthRange, step: 10)
                     .controlSize(.small)
                     .disabled(draftMenuBarMaxWidth <= 0)
-                Toggle("不限制宽度(名称过长时由系统裁切)", isOn: Binding(
-                    get: { draftMenuBarMaxWidth <= 0 },
-                    set: { unlimited in
-                        draftMenuBarMaxWidth = unlimited ? MenuBarLayout.unlimited : MenuBarLayout.defaultMaxWidth
-                    }
-                ))
+                Toggle(
+                    "不限制宽度(名称过长时由系统裁切)",
+                    isOn: Binding(
+                        get: { draftMenuBarMaxWidth <= 0 },
+                        set: { unlimited in
+                            draftMenuBarMaxWidth = unlimited ? MenuBarLayout.unlimited : MenuBarLayout.defaultMaxWidth
+                        }
+                    )
+                )
                 .font(.caption2)
                 .toggleStyle(.checkbox)
                 if draftMenuBarMaxWidth > 0 {
@@ -461,8 +469,9 @@ struct SettingsView: View {
             var valid = true
             for row in draftSessionTexts {
                 guard row.count == 2,
-                      let start = Self.parseMinute(row[0]),
-                      let end = Self.parseMinute(row[1]) else {
+                    let start = Self.parseMinute(row[0]),
+                    let end = Self.parseMinute(row[1])
+                else {
                     valid = false
                     break
                 }
@@ -493,8 +502,9 @@ struct SettingsView: View {
     private static func parseMinute(_ text: String) -> Int? {
         let parts = text.split(separator: ":").map { String($0) }
         guard parts.count == 2,
-              let h = Int(parts[0]), let m = Int(parts[1]),
-              (0...23).contains(h), (0...59).contains(m) else { return nil }
+            let h = Int(parts[0]), let m = Int(parts[1]),
+            (0...23).contains(h), (0...59).contains(m)
+        else { return nil }
         return h * 60 + m
     }
 

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
+
 @testable import StockBar
 
 @Suite("QuoteColors")

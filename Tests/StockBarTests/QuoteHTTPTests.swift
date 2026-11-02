@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import StockBar
 
 /// 可编排的假传输层:按脚本依次返回响应或抛错,并记录调用次数
@@ -67,7 +68,7 @@ struct QuoteHTTPTests {
     func retriesTimeoutThenSucceeds() async throws {
         let transport = ScriptedTransport([
             .failure(URLError(.timedOut)),
-            .success(successBody, 200)
+            .success(successBody, 200),
         ])
         let recorder = SleepRecorder()
         let client = makeClient(transport, recorder: recorder)
@@ -83,7 +84,7 @@ struct QuoteHTTPTests {
     func retriesServerErrorOnly() async throws {
         let serverError = ScriptedTransport([
             .success(json("{}"), 503),
-            .success(successBody, 200)
+            .success(successBody, 200),
         ])
         let serverClient = makeClient(serverError)
         _ = try await serverClient.data(for: URLRequest(url: URL(string: "https://example.com")!), label: "test")
@@ -112,7 +113,7 @@ struct QuoteHTTPTests {
         let transport = ScriptedTransport([
             .failure(URLError(.timedOut)),
             .failure(URLError(.timedOut)),
-            .failure(URLError(.timedOut))
+            .failure(URLError(.timedOut)),
         ])
         let recorder = SleepRecorder()
         let client = makeClient(transport, recorder: recorder)
@@ -166,10 +167,12 @@ struct QuoteHTTPTests {
     @Test("URLError 归一化为超时/网络两类")
     func mapsURLErrors() {
         #expect(FetchError.map(URLError(.timedOut)) == .timeout)
-        if case .network = FetchError.map(URLError(.notConnectedToInternet)) {} else {
+        if case .network = FetchError.map(URLError(.notConnectedToInternet)) {
+        } else {
             Issue.record("断网应映射为 .network")
         }
-        if case .network = FetchError.map(NSError(domain: "Custom", code: 1)) {} else {
+        if case .network = FetchError.map(NSError(domain: "Custom", code: 1)) {
+        } else {
             Issue.record("非 URL 域错误应映射为 .network")
         }
         #expect(FetchError.map(FetchError.api("x")) == .api("x"))
@@ -193,10 +196,11 @@ struct QuoteHTTPTests {
 
     @Test("Yahoo 解析:成功响应转成 Quote")
     func yahooParsesQuote() async throws {
-        let body = json("""
-        {"chart":{"result":[{"meta":{"regularMarketPrice":190.5,"previousClose":189.0,
-        "currency":"USD","regularMarketTime":1729000000,"shortName":"Apple Inc."}}]}}
-        """)
+        let body = json(
+            """
+            {"chart":{"result":[{"meta":{"regularMarketPrice":190.5,"previousClose":189.0,
+            "currency":"USD","regularMarketTime":1729000000,"shortName":"Apple Inc."}}]}}
+            """)
         let transport = ScriptedTransport([.success(body, 200)])
         let provider = YahooProvider(client: makeClient(transport))
 
@@ -216,7 +220,7 @@ struct QuoteHTTPTests {
         let transport = ScriptedTransport([
             .failure(URLError(.timedOut)),
             .failure(URLError(.timedOut)),
-            .success(ulist, 200)
+            .success(ulist, 200),
         ])
         let provider = EastMoneyProvider(
             client: makeClient(transport, policy: RetryPolicy(maxAttempts: 2, baseDelay: 0.4))
@@ -224,7 +228,7 @@ struct QuoteHTTPTests {
 
         let quote = try await provider.fetch(symbol: "600519.SS")
 
-        #expect(transport.callCount == 3)   // 主路径 2 次 + 备用路径 1 次
+        #expect(transport.callCount == 3)  // 主路径 2 次 + 备用路径 1 次
         #expect(quote.symbol == "600519")
         #expect(abs(quote.price - 123.45) < 0.0001)
         #expect(abs(quote.change - 1.0) < 0.0001)
