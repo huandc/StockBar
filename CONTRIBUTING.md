@@ -109,7 +109,8 @@ The subject line may be English or Chinese; Chinese is fine and used throughout 
 
 ## Code style and environment gotchas
 
-- No formatter is enforced yet (`swift-format` is on the roadmap); match the surrounding style: 4-space indent, Chinese comments in the app code, English in tests and docs.
+- Formatting is enforced by CI: run `./scripts/format.sh` before pushing (it rewrites `Sources/` and `Tests/` with the checked-in `.swift-format` config: 4-space indent, 120-column lines). `./scripts/format.sh --lint` is the check CI runs — do not reformat unrelated files in the same PR.
+- 4-space indent, Chinese comments in the app code, English in tests and docs.
 - `os.Logger` interpolations are autoclosures: referencing `self`-properties inside them fails with `reference to property 'x' in closure requires explicit use of 'self'`. Assign a local constant first.
 - In `Package.swift`, `targets:` must precede `swiftLanguageModes:`, otherwise SwiftPM reports `argument 'targets' must precede argument 'swiftLanguageModes'`.
 - `Package.swift` pins Swift language mode v5 on purpose while the toolchain is 6.x; do not flip it to v6 as part of an unrelated change.

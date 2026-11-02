@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 /// 全局数据模型:持有最新行情、设置项,并负责定时刷新
 @MainActor
@@ -86,7 +86,7 @@ final class QuoteModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(selectedProvider.rawValue, forKey: "dataSource")
             sourceStatus.selected = selectedProvider
-            sourceStatus.active = selectedProvider // 用户切换数据源时重置当前生效源
+            sourceStatus.active = selectedProvider  // 用户切换数据源时重置当前生效源
             sourceStatus.consecutiveFailures = 0
             restartTimer()
             Task { await refresh() }
@@ -201,7 +201,8 @@ final class QuoteModel: ObservableObject {
         refreshOnlyInSession = defaults.object(forKey: "refreshOnlyInSession") as? Bool ?? true
         customSessionsEnabled = defaults.bool(forKey: "customSessionsEnabled")
         if let data = defaults.data(forKey: "customSessions"),
-           let saved = try? JSONDecoder().decode([SessionRange].self, from: data) {
+            let saved = try? JSONDecoder().decode([SessionRange].self, from: data)
+        {
             customSessions = saved
         } else {
             customSessions = Market.detect(from: initialSymbol).defaultSessionRanges
@@ -279,7 +280,9 @@ final class QuoteModel: ObservableObject {
             consecutiveRefreshFailures += 1
             lastFailureReason = fetchError.userFacingReason
             let failCount = consecutiveRefreshFailures
-            QuoteLog.fetch.error("刷新失败 symbol=\(trimmed, privacy: .public) reason=\(fetchError.logReason, privacy: .public) failures=\(failCount, privacy: .public)")
+            QuoteLog.fetch.error(
+                "刷新失败 symbol=\(trimmed, privacy: .public) reason=\(fetchError.logReason, privacy: .public) failures=\(failCount, privacy: .public)"
+            )
             errorMessage = fetchError.localizedDescription
         }
     }
@@ -311,7 +314,9 @@ final class QuoteModel: ObservableObject {
         }
         let failedCount = failures.count
         let total = list.count
-        QuoteLog.fetch.error("轮显刷新完成 total=\(total, privacy: .public) failed=\(failedCount, privacy: .public) shown=\(shown, privacy: .public)")
+        QuoteLog.fetch.error(
+            "轮显刷新完成 total=\(total, privacy: .public) failed=\(failedCount, privacy: .public) shown=\(shown, privacy: .public)"
+        )
     }
 
     /// 定时刷新入口:开启「仅交易时段自动刷新」且休市时跳过(手动刷新不受影响)
@@ -345,7 +350,8 @@ final class QuoteModel: ObservableObject {
             } catch {
                 let reason = FetchError.map(error).logReason
                 let fallbackName = activeProvider.displayName
-                QuoteLog.fallback.notice("主数据源仍不可用 reason=\(reason, privacy: .public),继续使用 \(fallbackName, privacy: .public)")
+                QuoteLog.fallback.notice(
+                    "主数据源仍不可用 reason=\(reason, privacy: .public),继续使用 \(fallbackName, privacy: .public)")
                 let q = try await activeProvider.provider.fetch(symbol: symbol)
                 markSuccess()
                 return q
@@ -363,12 +369,16 @@ final class QuoteModel: ObservableObject {
             sourceStatus.consecutiveFailures += 1
             guard sourceStatus.consecutiveFailures >= SourceStatus.failureThreshold else {
                 let failCount = sourceStatus.consecutiveFailures
-                QuoteLog.fallback.notice("\(currentProviderName, privacy: .public) 失败(\(fetchError.logReason, privacy: .public)),连续失败 \(failCount) 次,\(SourceStatus.failureThreshold) 次后切换备用源")
+                QuoteLog.fallback.notice(
+                    "\(currentProviderName, privacy: .public) 失败(\(fetchError.logReason, privacy: .public)),连续失败 \(failCount) 次,\(SourceStatus.failureThreshold) 次后切换备用源"
+                )
                 throw fetchError
             }
             let previous = activeProvider
             let backup: QuoteProvider = previous == .yahoo ? .eastmoney : .yahoo
-            QuoteLog.fallback.notice("切换数据源 \(previous.displayName, privacy: .public) → \(backup.displayName, privacy: .public) reason=\(fetchError.logReason, privacy: .public)")
+            QuoteLog.fallback.notice(
+                "切换数据源 \(previous.displayName, privacy: .public) → \(backup.displayName, privacy: .public) reason=\(fetchError.logReason, privacy: .public)"
+            )
             sourceStatus.consecutiveFailures = 0
             sourceStatus.active = backup
             sourceStatus.lastSwitch = SourceStatus.SwitchRecord(

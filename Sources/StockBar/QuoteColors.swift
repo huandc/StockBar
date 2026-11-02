@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 /// 配色方案:国际(默认,绿涨红跌) / 中国(红涨绿跌) / 自定义
 enum ColorPreset: String, CaseIterable, Identifiable {
@@ -12,8 +12,8 @@ enum ColorPreset: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .international: return "国际(绿涨红跌)"
-        case .chinese:      return "中国(红涨绿跌)"
-        case .custom:       return "自定义"
+        case .chinese: return "中国(红涨绿跌)"
+        case .custom: return "自定义"
         }
     }
 

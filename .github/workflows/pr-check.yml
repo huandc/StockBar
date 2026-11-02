@@ -21,6 +21,9 @@ jobs:
       - name: 单元测试
         run: ./scripts/test.sh
 
+      - name: 代码格式检查(swift-format)
+        run: ./scripts/format.sh --lint
+
       - name: 校验 Issue 模板与工作流 YAML
         run: |
           ruby -ryaml -e 'ARGV.each { |f| YAML.load_file(f); puts "ok: #{f}" }' \

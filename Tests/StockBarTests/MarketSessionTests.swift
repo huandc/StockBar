@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import StockBar
 
 /// 在指定市场本地时区构造时刻,避免测试依赖机器时区
@@ -76,17 +77,20 @@ struct MarketSessionTests {
 
     @Test("默认时段与代码注释中的时段一致")
     func defaultRanges() {
-        #expect(Market.cn.defaultSessionRanges == [
-            SessionRange(startMinute: 570, endMinute: 690),
-            SessionRange(startMinute: 780, endMinute: 900)
-        ])
-        #expect(Market.hk.defaultSessionRanges == [
-            SessionRange(startMinute: 570, endMinute: 720),
-            SessionRange(startMinute: 780, endMinute: 960)
-        ])
-        #expect(Market.us.defaultSessionRanges == [
-            SessionRange(startMinute: 570, endMinute: 960)
-        ])
+        #expect(
+            Market.cn.defaultSessionRanges == [
+                SessionRange(startMinute: 570, endMinute: 690),
+                SessionRange(startMinute: 780, endMinute: 900),
+            ])
+        #expect(
+            Market.hk.defaultSessionRanges == [
+                SessionRange(startMinute: 570, endMinute: 720),
+                SessionRange(startMinute: 780, endMinute: 960),
+            ])
+        #expect(
+            Market.us.defaultSessionRanges == [
+                SessionRange(startMinute: 570, endMinute: 960)
+            ])
     }
 
     @Test("从代码后缀识别市场,大小写与空白不敏感")

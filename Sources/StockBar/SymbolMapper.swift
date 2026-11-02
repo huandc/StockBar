@@ -15,14 +15,14 @@ enum SymbolMapper {
             let code = String(upper[..<dot])
             let suffix = String(upper[upper.index(after: dot)...])
             switch suffix {
-            case "SS": return (1, code)                     // 沪市
-            case "SZ": return (0, code)                     // 深市
-            case "BJ": return (0, code)                     // 北交所(待实测)
+            case "SS": return (1, code)  // 沪市
+            case "SZ": return (0, code)  // 深市
+            case "BJ": return (0, code)  // 北交所(待实测)
             case "HK":
                 guard !code.isEmpty, code.allSatisfy({ $0.isNumber }), let num = Int(code) else {
-                    return nil                              // 港股代码必须为数字
+                    return nil  // 港股代码必须为数字
                 }
-                return (116, String(format: "%05d", num))   // 港股:补零至 5 位
+                return (116, String(format: "%05d", num))  // 港股:补零至 5 位
             default: return nil
             }
         }
@@ -30,13 +30,13 @@ enum SymbolMapper {
         // 无后缀:数字开头按 A 股/北交所推断,字母开头按美股
         if let first = upper.first, first.isNumber {
             switch first {
-            case "6": return (1, upper)                     // 沪市
-            case "0", "3": return (0, upper)                // 深市
-            case "4", "8", "9": return (0, upper)           // 北交所(待实测)
+            case "6": return (1, upper)  // 沪市
+            case "0", "3": return (0, upper)  // 深市
+            case "4", "8", "9": return (0, upper)  // 北交所(待实测)
             default: return nil
             }
         }
-        return (105, upper)                                 // 美股
+        return (105, upper)  // 美股
     }
 
     /// 构建东方财富 secid,如 1.600519 / 105.AAPL / 116.00700
@@ -49,7 +49,7 @@ enum SymbolMapper {
     static func defaultScale(market: Int) -> Int {
         switch market {
         case 105, 116: return 3
-        default:       return 2
+        default: return 2
         }
     }
 }

@@ -119,11 +119,15 @@ struct QuoteHTTPClient: Sendable {
             } catch {
                 let fetchError = FetchError.map(error)
                 guard policy.shouldRetry(fetchError, attempt: attempt) else {
-                    QuoteLog.fetch.error("\(label, privacy: .public) 请求失败 attempt=\(attempt) reason=\(fetchError.logReason, privacy: .public)")
+                    QuoteLog.fetch.error(
+                        "\(label, privacy: .public) 请求失败 attempt=\(attempt) reason=\(fetchError.logReason, privacy: .public)"
+                    )
                     throw fetchError
                 }
                 let delay = policy.delay(afterAttempt: attempt)
-                QuoteLog.fetch.notice("\(label, privacy: .public) 请求失败 attempt=\(attempt) reason=\(fetchError.logReason, privacy: .public),\(delay, format: .fixed(precision: 2))s 后重试")
+                QuoteLog.fetch.notice(
+                    "\(label, privacy: .public) 请求失败 attempt=\(attempt) reason=\(fetchError.logReason, privacy: .public),\(delay, format: .fixed(precision: 2))s 后重试"
+                )
                 try await sleep(delay)
                 attempt += 1
             }

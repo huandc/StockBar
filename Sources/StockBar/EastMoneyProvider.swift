@@ -26,7 +26,8 @@ struct EastMoneyProvider: QuoteProviding {
     func fetch(symbol: String) async throws -> Quote {
         let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let secid = SymbolMapper.eastMoneySecid(trimmed),
-              let market = SymbolMapper.eastMoneyMarketAndCode(trimmed)?.market else {
+            let market = SymbolMapper.eastMoneyMarketAndCode(trimmed)?.market
+        else {
             throw FetchError.api("无法解析东方财富代码:\(trimmed)")
         }
 
@@ -35,7 +36,8 @@ struct EastMoneyProvider: QuoteProviding {
             return try await fetchSingle(secid: secid, market: market, symbol: trimmed)
         } catch {
             let reason = FetchError.map(error).logReason
-            QuoteLog.fetch.notice("eastmoney \(trimmed, privacy: .public) 主路径失败 reason=\(reason, privacy: .public),降级到 ulist 接口")
+            QuoteLog.fetch.notice(
+                "eastmoney \(trimmed, privacy: .public) 主路径失败 reason=\(reason, privacy: .public),降级到 ulist 接口")
             return try await fetchUlist(secid: secid, market: market, symbol: trimmed)
         }
     }
@@ -61,7 +63,8 @@ struct EastMoneyProvider: QuoteProviding {
         let divisor = pow(10.0, Double(scale))
         let price = priceValue / divisor
         // 昨收缺失时用「最新价 - 涨跌额」兜底
-        let previousClose = (d.f60.map { $0 / divisor })
+        let previousClose =
+            (d.f60.map { $0 / divisor })
             ?? (d.f169.map { price - $0 / divisor })
             ?? price
 
@@ -77,12 +80,12 @@ struct EastMoneyProvider: QuoteProviding {
 
     private struct StockGetResponse: Decodable {
         struct Data: Decodable {
-            let f43: Double?   // 最新价(缩放)
-            let f57: String?   // 代码
-            let f58: String?   // 名称
-            let f59: Double?   // 缩放位(10^f59)
-            let f60: Double?   // 昨收(缩放)
-            let f86: Double?   // 时间戳(Unix 秒)
+            let f43: Double?  // 最新价(缩放)
+            let f57: String?  // 代码
+            let f58: String?  // 名称
+            let f59: Double?  // 缩放位(10^f59)
+            let f60: Double?  // 昨收(缩放)
+            let f86: Double?  // 时间戳(Unix 秒)
             let f107: Double?  // 市场号
             let f169: Double?  // 涨跌额(缩放)
         }
@@ -121,7 +124,7 @@ struct EastMoneyProvider: QuoteProviding {
             price: price,
             previousClose: previousClose,
             currency: "",
-            marketTime: nil, // ulist 接口不返回时间戳
+            marketTime: nil,  // ulist 接口不返回时间戳
             name: item.f14
         )
     }
@@ -130,8 +133,8 @@ struct EastMoneyProvider: QuoteProviding {
         struct Data: Decodable {
             let diff: [Item]?
             struct Item: Decodable {
-                let f2: Double?   // 最新价(缩放)
-                let f4: Double?   // 涨跌额(缩放)
+                let f2: Double?  // 最新价(缩放)
+                let f4: Double?  // 涨跌额(缩放)
                 let f12: String?  // 代码
                 let f13: Double?  // 市场号
                 let f14: String?  // 名称
