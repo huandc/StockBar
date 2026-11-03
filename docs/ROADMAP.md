@@ -79,6 +79,23 @@
   - CONTRIBUTING 的风格章节改为「CI 强制」并说明不要在同一个 PR 里重排无关文件
   > 验收:本地跑 `./scripts/format.sh` 后 `git diff` 为空,CI 上 lint 严格模式通过。
 
+## P3 — 国际化(中 / 英)
+
+- [ ] **应用内多语言与语言选项**：界面文案支持简体中文与英文,设置页可切换
+  - 语言来源三档：跟随系统 / 简体中文 / English，默认「跟随系统」；选择持久化到 UserDefaults(key `appLanguage`）
+  - 资源：`Sources/StockBar/Resources/` 下 `zh-Hans.lproj/Localizable.strings` 与 `en.lproj/Localizable.strings`，
+    `Package.swift` 加 `defaultLocalization: "en"` 与 `resources: [.process("Resources")]`，运行时用 `Bundle.module`；
+    不用 Xcode String Catalog（SwiftPM 下 `.xcstrings` 支持不稳），保持纯文本 strings 便于 review 与 CI 校验
+  - 覆盖范围：面板全部标签/按钮/占位提示、`FetchError.errorDescription` 与 `userFacingReason`、`SourceStatus.summary`
+    的「XX 代班 · 原因,3 分钟前自动切换」、`RefreshStatus` 的「下次刷新 / 将在 … 重试 / 休市暂停」、菜单栏模板占位符说明
+  - 关键难点：这些文案现在硬编码在没有 Bundle 上下文的纯函数里 → 改成接收 `Localization` 值（内部持有 bundle + locale），
+    测试注入固定 bundle，避免测试依赖系统语言
+  - 切换即时生效：菜单栏与面板都从 `@Published var appLanguage` 取文案，切换后无需重启；若个别系统 API 缓存，
+    在其文档里标注需重启
+  - 测试：①两份 strings 的 key 集合必须完全一致（缺失即失败，防止漏翻）②按 `en` / `zh-Hans` 各取若干关键文案断言
+    ③`FetchError` 六种原因在两语言下都非空 ④切换语言后 `menuBarText` 与状态行变化
+  - 验收：设置里切到 English，面板、错误提示、降级状态、失败重试文案全为英文且无中文残留；切回中文恢复；
+    `./scripts/test.sh` 通过；新增 key 一致性检查接入 `pr-check.yml`（或单测）"
 ## 已完成
 
 - [x] 2026-08-14 初版：菜单栏展示、多数据源（Yahoo / 东方财富）、格式与配色可配置
