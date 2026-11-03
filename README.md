@@ -2,6 +2,8 @@
 
 > 纯菜单栏 Mac 股票行情应用:菜单栏实时显示股价,涨跌一目了然。
 
+[English](README.en.md) · [简体中文](README.md)
+
 [![Build & Release](https://github.com/huandc/StockBar/actions/workflows/release.yml/badge.svg)](https://github.com/huandc/StockBar/actions/workflows/release.yml)
 
 数据来源:默认 [Yahoo Finance](https://finance.yahoo.com/),可在设置中切换**东方财富**,均免费、无需 API Key。
@@ -13,6 +15,9 @@
 - 配色:绿涨红跌 / 红涨绿跌 / 自定义涨跌平三色
 - 支持美股、A 股、港股,代码历史记录一键切换
 - 自动刷新 5 / 10 / 30 / 60 秒可选,仅交易时段自动刷新(休市暂停,手动刷新不受影响)
+- **多符号轮显**:菜单栏按间隔轮播自选列表,切换只读缓存、不额外发请求
+- **宽度自适应**:名称过长时从开头截断,价格与代码始终可见
+- **失败状态可见**:刷新失败时菜单栏出现警告图标,面板给出原因与下次重试时间
 
 效果示意:
 
@@ -40,6 +45,8 @@
 | 刷新间隔 | 5 / 10 / 30 / 60 秒 |
 | 交易时段刷新 | 勾选「仅交易时段自动刷新」,休市时暂停 |
 | 交易时段 | 可自定义开收盘时间(默认按市场,可增减时段) |
+| 菜单栏最大宽度 | 120–400 pt 滑块,或选「不限制」 |
+| 菜单栏轮显自选列表 | 开关 + 自选代码 + 切换间隔(5/10/30/60 秒) |
 
 代码写法:A 股沪市 `600519.SS`、深市 `000001.SZ`、港股 `0700.HK`,美股直接写 `AAPL`。
 
@@ -49,15 +56,18 @@
 ## 🔧 从源码构建
 
 ```bash
-git clone git@github.com:huandc/StockBar.git
+git clone https://github.com/huandc/StockBar.git
 cd StockBar
 swift build -c release
 ./.build/release/StockBar
 ```
 
+测试与格式化:`./scripts/test.sh`、`./scripts/format.sh`(说明见 [CONTRIBUTING.md](CONTRIBUTING.md))。
+
 ## ❓ 常见问题
 
 - **菜单栏显示 `--`?** 检查代码格式与网络,点「立即刷新」重试
+- **菜单栏出现橙色警告图标?** 上次刷新失败,悬停可看原因,面板会显示下次重试时间
 - **无法访问 Yahoo?** 设置中切到「东方财富」,或开启自动切换备用源
 - **如何退出?** 面板 →「退出」(应用无 Dock 图标)
 - **支持的系统?** macOS 13 及以上

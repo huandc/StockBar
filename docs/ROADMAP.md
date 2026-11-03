@@ -60,7 +60,16 @@
   - `pr-check.yml` 新增两步:校验所有 Issue 模板/工作流 YAML 可解析、校验模板含 name/description/body 且
     body 项 type 合法;README 增加「参与贡献」段落
   > 验收:开 Issue 时出现结构化表单;开 PR 时自动带出检查清单;模板写坏会被 CI 拦下。
-- [ ] README 英文版 + 截图
+- [x] **README 英文版**：面向英文读者重写一份，并补上近期新增能力
+  - 新增 `README.en.md`：功能清单（含多符号轮显、宽度自适应、失败状态可见）、安装、设置表、代码写法、
+    模板占位符、从源码构建、排障、贡献与许可
+  - 中文 `README.md` 与英文版顶部互加语言切换链接；中文版补齐「轮显 / 最大宽度 / 失败图标」三条功能、
+    两行设置项、排障条目，并把 clone 地址从 SSH 改为 HTTPS
+  > 验收：两份 README 都能独立看懂安装与配置，语言链接互相可达。
+- [ ] **README 截图**：菜单栏 + 面板各一张
+  - 卡点：本机 `screencapture -x` 报 `could not create image from display`(无屏幕录制权限/无图形会话)，
+    无法自动生成真实截图；需要人工在有屏幕录制权限的桌面会话里补图，再引用到两份 README
+  > 验收：`docs/images/` 下有两张实拍图并在 README 中正确显示。
 - [ ] Homebrew Cask 发布
 - [x] `swift-format` 配置与 CI 检查
   - 新增 `.swift-format`(基于 6.3 默认配置,改 4 空格缩进、120 列、保留既有换行、不重排 import),
@@ -82,3 +91,4 @@
 - [x] 2026-10-30 多符号轮显:菜单栏按间隔轮播自选列表,每轮统一拉取并缓存,切换只读缓存;新增 8 个用例
 - [x] 2026-10-31 工程化入口:Issue 表单(问题反馈/功能建议)+ PR 模板 + 英文 CONTRIBUTING,并把模板校验接进 CI
 - [x] 2026-11-02 接入 swift-format:统一 4 空格/120 列并全量格式化,CI 增加 lint --strict 检查与 scripts/format.sh
+- [x] 2026-11-03 README 英文版:新增 `README.en.md`(补齐轮显/宽度/失败状态),中英文互加语言切换,中文版同步新能力并改用 HTTPS clone;截图因环境无屏幕录制权限拆为独立条目
