@@ -1,0 +1,26 @@
+name: Cask Check
+
+on:
+  pull_request:
+    paths:
+      - "Casks/**"
+      - "scripts/check-cask.sh"
+      - "scripts/update-cask.sh"
+      - ".github/workflows/cask-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cask:
+    name: cask
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 语法检查
+        run: ruby -c Casks/stockbar.rb
+
+      - name: 版本与 sha256 必须与 Release 产物一致
+        run: ./scripts/check-cask.sh

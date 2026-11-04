@@ -115,6 +115,20 @@ The subject line may be English or Chinese; Chinese is fine and used throughout 
 - In `Package.swift`, `targets:` must precede `swiftLanguageModes:`, otherwise SwiftPM reports `argument 'targets' must precede argument 'swiftLanguageModes'`.
 - `Package.swift` pins Swift language mode v5 on purpose while the toolchain is 6.x; do not flip it to v6 as part of an unrelated change.
 
+## Releasing and the Homebrew cask
+
+1. Branch from `main` as `release/vX.Y.Z` and push it — `.github/workflows/release.yml` builds the `.app`, ad-hoc signs it, zips it and attaches `StockBar-X.Y.Z-macOS.zip` to a GitHub release tagged `vX.Y.Z`.
+2. Point the cask at the new build and commit the result:
+
+```bash
+./scripts/update-cask.sh X.Y.Z   # rewrites version + sha256, then self-checks
+git add Casks/stockbar.rb && git commit -m "chore: 更新 Homebrew cask 到 X.Y.Z"
+```
+
+`scripts/check-cask.sh` downloads the release asset and refuses a cask whose `sha256` does not match, so a stale cask cannot be merged unnoticed — `cask-check` runs it automatically on any PR that touches `Casks/`.
+
+The cask lives in this repository under `Casks/`, so users install it with `brew tap huandc/stockbar https://github.com/huandc/StockBar` followed by `brew install --cask stockbar`; there is no separate tap repository to keep in sync.
+
 ## Reporting bugs
 
 Use the issue forms (`.github/ISSUE_TEMPLATE/`): the bug report asks for the macOS version, chip, data source and logs, which is usually everything needed to reproduce a menu-bar or refresh problem. For security reports, do not open a public issue — use the private channel linked from the issue chooser.

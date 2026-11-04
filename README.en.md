@@ -27,6 +27,17 @@ What it looks like:
 
 ## 📥 Install
 
+### Homebrew (recommended, upgrades included)
+
+```bash
+brew tap huandc/stockbar https://github.com/huandc/StockBar
+brew install --cask stockbar
+```
+
+Upgrade with `brew upgrade --cask stockbar`; remove with `brew uninstall --cask stockbar` (add `--zap` to delete preferences too).
+
+### Manual
+
 1. Download the latest build from [Releases](https://github.com/huandc/StockBar/releases) and unzip it
 2. Drag `StockBar.app` into `/Applications`
 3. First launch: right-click → **Open** → confirm (the app is not notarised)

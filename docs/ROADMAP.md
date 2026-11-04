@@ -70,7 +70,16 @@
   - 卡点：本机 `screencapture -x` 报 `could not create image from display`(无屏幕录制权限/无图形会话)，
     无法自动生成真实截图；需要人工在有屏幕录制权限的桌面会话里补图，再引用到两份 README
   > 验收：`docs/images/` 下有两张实拍图并在 README 中正确显示。
-- [ ] Homebrew Cask 发布
+- [x] Homebrew Cask 发布
+  - 新增 `Casks/stockbar.rb`:`version` 取自 Release tag、zip 用 `StockBar-#{version}-macOS.zip`,
+    `app "StockBar.app"`、`depends_on macos: :ventura`、`livecheck` 走 github_latest、`zap` 清偏好设置,
+    `caveats` 说明未公证需右键打开
+  - 新增 `scripts/check-cask.sh`(语法 + 下载产物核对 sha256 + 校验包内含可执行文件)与
+    `scripts/update-cask.sh <version>`(发布后一键改 version/sha256 并自检)
+  - `.github/workflows/cask-check.yml`:改动 `Casks/**` 或两个脚本时自动跑上述核对,防止 cask 指向不存在的产物或旧 sha
+  - 中英文 README 增加 Homebrew 安装/升级/卸载说明(Cask 装在主仓库的 `Casks/` 下,`brew tap huandc/stockbar <repo-url>` 即可用,
+    不额外维护 tap 仓库)
+  > 验收:`ruby -c` 与 `brew style` 通过;`scripts/check-cask.sh` 对 v1.0.0 产物校验一致。
 - [x] `swift-format` 配置与 CI 检查
   - 新增 `.swift-format`(基于 6.3 默认配置,改 4 空格缩进、120 列、保留既有换行、不重排 import),
     用 `xcrun swift-format format -i -r` 全量规范化一次(19 个文件,仅空白与折行)
@@ -109,3 +118,4 @@
 - [x] 2026-10-31 工程化入口:Issue 表单(问题反馈/功能建议)+ PR 模板 + 英文 CONTRIBUTING,并把模板校验接进 CI
 - [x] 2026-11-02 接入 swift-format:统一 4 空格/120 列并全量格式化,CI 增加 lint --strict 检查与 scripts/format.sh
 - [x] 2026-11-03 README 英文版:新增 `README.en.md`(补齐轮显/宽度/失败状态),中英文互加语言切换,中文版同步新能力并改用 HTTPS clone;截图因环境无屏幕录制权限拆为独立条目
+- [x] 2026-11-04 Homebrew Cask:新增 Casks/stockbar.rb(含 livecheck/zap/caveats)与 check/update 两个脚本,CI 在改动 cask 时核对版本与 sha256
