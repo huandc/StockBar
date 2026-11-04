@@ -31,6 +31,7 @@
 
 ```bash
 brew tap huandc/stockbar https://github.com/huandc/StockBar
+brew trust --cask huandc/stockbar/stockbar   # Homebrew 7 起,第三方 tap 需显式信任
 brew install --cask stockbar
 ```
 

@@ -31,6 +31,7 @@ What it looks like:
 
 ```bash
 brew tap huandc/stockbar https://github.com/huandc/StockBar
+brew trust --cask huandc/stockbar/stockbar   # Homebrew 7+ asks you to trust third-party taps
 brew install --cask stockbar
 ```
 

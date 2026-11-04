@@ -127,7 +127,7 @@ git add Casks/stockbar.rb && git commit -m "chore: 更新 Homebrew cask 到 X.Y.
 
 `scripts/check-cask.sh` downloads the release asset and refuses a cask whose `sha256` does not match, so a stale cask cannot be merged unnoticed — `cask-check` runs it automatically on any PR that touches `Casks/`.
 
-The cask lives in this repository under `Casks/`, so users install it with `brew tap huandc/stockbar https://github.com/huandc/StockBar` followed by `brew install --cask stockbar`; there is no separate tap repository to keep in sync.
+The cask lives in this repository under `Casks/`, so users install it with `brew tap huandc/stockbar https://github.com/huandc/StockBar`, `brew trust --cask huandc/stockbar/stockbar` (Homebrew 7 refuses untrusted third-party taps) and then `brew install --cask stockbar`; there is no separate tap repository to keep in sync.
 
 ## Reporting bugs
 
