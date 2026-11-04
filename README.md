@@ -27,6 +27,17 @@
 
 ## 📥 安装
 
+### Homebrew(推荐,便于升级)
+
+```bash
+brew tap huandc/stockbar https://github.com/huandc/StockBar
+brew install --cask stockbar
+```
+
+升级用 `brew upgrade --cask stockbar`;卸载 `brew uninstall --cask stockbar`(加 `--zap` 连同偏好设置一起清掉)。
+
+### 手动安装
+
 1. 从 [Releases](https://github.com/huandc/StockBar/releases) 下载最新版并解压
 2. 把 `StockBar.app` 拖入「应用程序」
 3. 首次打开:右键 →「打开」→ 确认(应用未公证)
