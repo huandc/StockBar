@@ -258,6 +258,21 @@ final class QuoteModel: ObservableObject {
         UserDefaults.standard.set(color.rgb?.encodeData(), forKey: key)
     }
 
+    /// 文档截图 / 预览用:直接注入一只行情,不触发网络请求。
+    /// 仅用于 `DocSnapshots` 渲染文档图片,正常运行时不会调用。
+    func seedPreview(
+        quote previewQuote: Quote, symbol previewSymbol: String, lastUpdated updated: Date?,
+        nextRefreshAt next: Date? = nil
+    ) {
+        symbol = previewSymbol
+        quote = previewQuote
+        lastUpdated = updated
+        nextRefreshAt = next
+        errorMessage = nil
+        consecutiveRefreshFailures = 0
+        lastFailureReason = nil
+    }
+
     /// 记录股票代码到历史(去重、最新在前、最多 10 条)
     func recordHistory(_ symbol: String) {
         let trimmed = symbol.trimmingCharacters(in: .whitespacesAndNewlines)

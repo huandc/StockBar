@@ -6,6 +6,20 @@ struct StockBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var model = QuoteModel()
 
+    init() {
+        // 文档截图模式:渲染完即退出,不进入 App 生命周期
+        guard let directory = DocSnapshots.requestedDirectory else { return }
+        NSApplication.shared.setActivationPolicy(.prohibited)
+        do {
+            let urls = try DocSnapshots.render(into: directory)
+            for url in urls { print("已写出 \(url.path)") }
+            exit(0)
+        } catch {
+            FileHandle.standardError.write(Data("截图渲染失败: \(error)\n".utf8))
+            exit(1)
+        }
+    }
+
     var body: some Scene {
         MenuBarExtra {
             ContentView()
