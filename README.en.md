@@ -8,6 +8,15 @@
 
 Data sources: [Yahoo Finance](https://finance.yahoo.com/) by default, or **EastMoney** from the settings. Both are free and need no API key.
 
+## 📸 Screenshots
+
+| Menu bar | Panel |
+| --- | --- |
+| ![Menu bar](docs/images/menubar.png) | ![Panel](docs/images/panel.png) |
+
+> Rendered offscreen from the app's own SwiftUI views by `./scripts/screenshots.sh` (`DocSnapshots`) —
+> not a screen capture, so it needs no screen-recording permission and is reproducible.
+
 ## ✨ Features
 
 - Always-on menu bar display; format is configurable (price / code + price / name + price / custom template)

@@ -35,6 +35,13 @@ error: no such module 'Testing'
 
 Tests must not touch the network. HTTP-dependent code takes an injectable `HTTPTransporting`, and the test suite ships `ScriptedTransport` for that purpose.
 
+## Documentation images
+
+`docs/images/*.png` are rendered offscreen from the app's own SwiftUI views by `DocSnapshots`
+(`StockBar --render-docs-images <dir>`), which `./scripts/screenshots.sh` wraps. Re-run it after
+changing the panel or menu bar layout, and commit the regenerated PNGs. Rendering is deterministic:
+if the images change without a UI change, the sample data or a time field is not frozen.
+
 ## Project layout
 
 | File | Responsibility |

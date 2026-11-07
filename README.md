@@ -8,6 +8,15 @@
 
 数据来源:默认 [Yahoo Finance](https://finance.yahoo.com/),可在设置中切换**东方财富**,均免费、无需 API Key。
 
+## 📸 界面
+
+| 菜单栏 | 面板 |
+| --- | --- |
+| ![菜单栏](docs/images/menubar.png) | ![面板](docs/images/panel.png) |
+
+> 图片由 `./scripts/screenshots.sh` 用应用自身的视图离屏渲染生成(`DocSnapshots`),不是屏幕截图,
+> 因此不需要录屏权限、结果可重复;真实使用效果与之相同。
+
 ## ✨ 功能
 
 - 菜单栏常驻显示,格式可配:价格 / 代码+价格 / 名称+价格 / 自定义模板

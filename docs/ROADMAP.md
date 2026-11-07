@@ -66,10 +66,15 @@
   - 中文 `README.md` 与英文版顶部互加语言切换链接；中文版补齐「轮显 / 最大宽度 / 失败图标」三条功能、
     两行设置项、排障条目，并把 clone 地址从 SSH 改为 HTTPS
   > 验收：两份 README 都能独立看懂安装与配置，语言链接互相可达。
-- [ ] **README 截图**：菜单栏 + 面板各一张
-  - 卡点：本机 `screencapture -x` 报 `could not create image from display`(无屏幕录制权限/无图形会话)，
-    无法自动生成真实截图；需要人工在有屏幕录制权限的桌面会话里补图，再引用到两份 README
-  > 验收：`docs/images/` 下有两张实拍图并在 README 中正确显示。
+- [x] **README 截图**：菜单栏 + 面板各一张
+  - 2026-11-07 完成，改用**离屏渲染**而不是屏幕截图：`DocSnapshots` 用 `ImageRenderer` 把
+    `ContentView` 与 `MenuBarLabel` 渲染成 PNG，示例行情固定（贵州茅台 1341.99，时间与「下次刷新」都冻结），
+    因此结果可重复、不需要录屏/辅助功能权限、CI 可跑
+  - `StockBar --render-docs-images <dir>` 由 `scripts/screenshots.sh` 包装；新增 3 个用例
+    （PNG 合法、两次渲染字节一致、示例行情随语言格式化）
+  - 原卡点保留说明：菜单栏面板要点击状态项才出现，`osascript` 无辅助功能权限时报 `-1719`，
+    `screencapture` 整条菜单栏还会把用户桌面图标拍进公开仓库
+  > 验收：`docs/images/panel.png`、`menubar.png` 在两份 README 中正确显示，且 `./scripts/screenshots.sh` 可重现。
 - [x] Homebrew Cask 发布
   - 新增 `Casks/stockbar.rb`:`version` 取自 Release tag、zip 用 `StockBar-#{version}-macOS.zip`,
     `app "StockBar.app"`、`depends_on macos: :ventura`、`livecheck` 走 github_latest、`zap` 清偏好设置,
@@ -123,3 +128,4 @@
 - [x] 2026-11-03 README 英文版:新增 `README.en.md`(补齐轮显/宽度/失败状态),中英文互加语言切换,中文版同步新能力并改用 HTTPS clone;截图因环境无屏幕录制权限拆为独立条目
 - [x] 2026-11-04 Homebrew Cask:新增 Casks/stockbar.rb(含 livecheck/zap/caveats)与 check/update 两个脚本,CI 在改动 cask 时核对版本与 sha256
 - [x] 2026-11-07 应用内多语言:中英双语 strings + 设置页语言开关(跟随系统/中文/English),错误与状态文案按语言取;新增 key 一致性测试
+- [x] 2026-11-07 README 截图:新增 DocSnapshots 离屏渲染(ImageRenderer)与 scripts/screenshots.sh,生成菜单栏/面板两张图并嵌入中英 README;新增 3 个确定性用例
