@@ -35,7 +35,7 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
-            .help("设置")
+            .help(model.tr("设置"))
         }
     }
 
@@ -71,14 +71,14 @@ struct ContentView: View {
                 .foregroundStyle(model.changeColor(q))
 
             if let t = q.marketTime {
-                Text("行情时间 " + t.formatted(date: .omitted, time: .standard))
+                Text(model.trf("行情时间 %@", t.formatted(date: .omitted, time: .standard)))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
         } else {
             ProgressView()
                 .controlSize(.small)
-            Text("加载中…")
+            Text(model.tr("加载中…"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -104,7 +104,7 @@ struct ContentView: View {
         }
 
         if model.refreshOnlyInSession && !model.marketOpen {
-            Text("当前休市,暂停自动刷新")
+            Text(model.tr("当前休市,暂停自动刷新"))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -115,17 +115,17 @@ struct ContentView: View {
     private var footer: some View {
         HStack(spacing: 8) {
             if let t = model.lastUpdated {
-                Text("更新于 " + t.formatted(date: .omitted, time: .standard))
+                Text(model.trf("更新于 %@", t.formatted(date: .omitted, time: .standard)))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else {
-                Text("尚未更新")
+                Text(model.tr("尚未更新"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Button("立即刷新") { model.startRefresh() }
-            Button("退出", role: .destructive) { NSApp.terminate(nil) }
+            Button(model.tr("立即刷新")) { model.startRefresh() }
+            Button(model.tr("退出"), role: .destructive) { NSApp.terminate(nil) }
         }
     }
 }
@@ -156,6 +156,7 @@ struct SettingsView: View {
     @State private var draftUpColor = ColorPreset.defaultUp
     @State private var draftDownColor = ColorPreset.defaultDown
     @State private var draftFlatColor = ColorPreset.defaultFlat
+    @State private var draftAppLanguage: AppLanguage = .system
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -165,7 +166,7 @@ struct SettingsView: View {
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .buttonStyle(.plain)
-                Text("设置")
+                Text(model.tr("设置"))
                     .font(.headline)
                 Spacer()
             }
@@ -174,7 +175,7 @@ struct SettingsView: View {
             Divider()
             HStack {
                 Spacer()
-                Button("保存") { save() }
+                Button(model.tr("保存")) { save() }
                     .buttonStyle(.borderedProminent)
             }
         }
@@ -186,13 +187,13 @@ struct SettingsView: View {
     private var settings: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
-                TextField("股票代码,如 AAPL / 600519.SS / 0700.HK", text: $draftSymbol)
+                TextField(model.tr("股票代码,如 AAPL / 600519.SS / 0700.HK"), text: $draftSymbol)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit(save)
 
                 Menu {
                     if model.symbolHistory.isEmpty {
-                        Text("暂无历史记录")
+                        Text(model.tr("暂无历史记录"))
                     } else {
                         ForEach(model.symbolHistory, id: \.self) { s in
                             Button(s) { draftSymbol = s }
@@ -205,15 +206,15 @@ struct SettingsView: View {
                 .menuStyle(.borderlessButton)
                 .fixedSize()
                 .disabled(model.symbolHistory.isEmpty)
-                .help("历史记录")
+                .help(model.tr("历史记录"))
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("数据源")
+                    Text(model.tr("数据源"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Picker("数据源", selection: $draftProvider) {
+                    Picker(model.tr("数据源"), selection: $draftProvider) {
                         ForEach(QuoteProvider.allCases) { p in
                             Text(p.displayName).tag(p)
                         }
@@ -221,7 +222,7 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
-                Toggle("主源失败自动切换备用源", isOn: $draftEnableFallback)
+                Toggle(model.tr("主源失败自动切换备用源"), isOn: $draftEnableFallback)
                     .font(.caption)
                 // 数据源状态:降级时说明「谁代班、为什么切、什么时候切的」
                 HStack(spacing: 4) {
@@ -235,28 +236,28 @@ struct SettingsView: View {
                         .foregroundStyle(model.sourceStatus.isDegraded ? .secondary : .tertiary)
                         .textSelection(.enabled)
                 }
-                .help("数据源状态：切换原因与时间来自最近一次自动降级")
+                .help(model.tr("数据源状态：切换原因与时间来自最近一次自动降级"))
             }
 
             HStack {
-                Text("刷新间隔")
+                Text(model.tr("刷新间隔"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Picker("刷新间隔", selection: $draftRefreshInterval) {
-                    Text("5秒").tag(5)
-                    Text("10秒").tag(10)
-                    Text("30秒").tag(30)
-                    Text("60秒").tag(60)
+                Picker(model.tr("刷新间隔"), selection: $draftRefreshInterval) {
+                    Text(model.tr("5秒")).tag(5)
+                    Text(model.tr("10秒")).tag(10)
+                    Text(model.tr("30秒")).tag(30)
+                    Text(model.tr("60秒")).tag(60)
                 }
                 .pickerStyle(.menu)
                 .labelsHidden()
             }
 
-            Toggle("仅交易时段自动刷新", isOn: $draftRefreshOnlyInSession)
+            Toggle(model.tr("仅交易时段自动刷新"), isOn: $draftRefreshOnlyInSession)
                 .font(.caption)
 
             Toggle(
-                "自定义交易时段",
+                model.tr("自定义交易时段"),
                 isOn: Binding(
                     get: { draftCustomSessionsEnabled },
                     set: { on in
@@ -297,7 +298,7 @@ struct SettingsView: View {
                     Button {
                         draftSessionTexts.append(["09:30", "15:00"])
                     } label: {
-                        Label("添加时段", systemImage: "plus.circle")
+                        Label(model.tr("添加时段"), systemImage: "plus.circle")
                     }
                     .buttonStyle(.plain)
                     .font(.caption)
@@ -306,19 +307,19 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("菜单栏格式")
+                    Text(model.tr("菜单栏格式"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Picker("菜单栏格式", selection: $draftMenuBarFormat) {
+                    Picker(model.tr("菜单栏格式"), selection: $draftMenuBarFormat) {
                         ForEach(MenuBarFormat.allCases) { f in
-                            Text(f.label).tag(f)
+                            Text(f.label(model.localization)).tag(f)
                         }
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
                 }
                 if draftMenuBarFormat == .custom {
-                    TextField("模板,如 {name} {price}({changePercent}%)", text: $draftMenuBarTemplate)
+                    TextField(model.tr("模板,如 {name} {price}({changePercent}%)"), text: $draftMenuBarTemplate)
                         .textFieldStyle(.roundedBorder)
                         .font(.caption)
                 }
@@ -326,11 +327,11 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text("菜单栏最大宽度")
+                    Text(model.tr("菜单栏最大宽度"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(draftMenuBarMaxWidth <= 0 ? "不限制" : "\(Int(draftMenuBarMaxWidth)) pt")
+                    Text(draftMenuBarMaxWidth <= 0 ? model.tr("不限制") : "\(Int(draftMenuBarMaxWidth)) pt")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -338,7 +339,7 @@ struct SettingsView: View {
                     .controlSize(.small)
                     .disabled(draftMenuBarMaxWidth <= 0)
                 Toggle(
-                    "不限制宽度(名称过长时由系统裁切)",
+                    model.tr("不限制宽度(名称过长时由系统裁切)"),
                     isOn: Binding(
                         get: { draftMenuBarMaxWidth <= 0 },
                         set: { unlimited in
@@ -349,35 +350,35 @@ struct SettingsView: View {
                 .font(.caption2)
                 .toggleStyle(.checkbox)
                 if draftMenuBarMaxWidth > 0 {
-                    Text("超出宽度时从开头截断,保留代码与价格;如「…AAPL 190.50」")
+                    Text(model.tr("超出宽度时从开头截断,保留代码与价格;如「…AAPL 190.50」"))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("菜单栏轮显自选列表", isOn: $draftRotationEnabled)
+                Toggle(model.tr("菜单栏轮显自选列表"), isOn: $draftRotationEnabled)
                     .font(.caption)
                 if draftRotationEnabled {
-                    TextField("自选代码,逗号/换行分隔,如 AAPL, 0700.HK, MSFT", text: $draftWatchlistText)
+                    TextField(model.tr("自选代码,逗号/换行分隔,如 AAPL, 0700.HK, MSFT"), text: $draftWatchlistText)
                         .textFieldStyle(.roundedBorder)
                         .font(.caption)
                     HStack {
-                        Text("切换间隔")
+                        Text(model.tr("切换间隔"))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                        Picker("切换间隔", selection: $draftRotationInterval) {
-                            Text("5秒").tag(5)
-                            Text("10秒").tag(10)
-                            Text("30秒").tag(30)
-                            Text("60秒").tag(60)
+                        Picker(model.tr("切换间隔"), selection: $draftRotationInterval) {
+                            Text(model.tr("5秒")).tag(5)
+                            Text(model.tr("10秒")).tag(10)
+                            Text(model.tr("30秒")).tag(30)
+                            Text(model.tr("60秒")).tag(60)
                         }
                         .pickerStyle(.menu)
                         .labelsHidden()
                         .controlSize(.small)
                         Spacer()
                         if model.isRotating {
-                            Text("正在显示 \(model.displayedSymbol)")
+                            Text(model.trf("正在显示 %@", model.displayedSymbol))
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
                         }
@@ -390,18 +391,34 @@ struct SettingsView: View {
                 }
             }
 
-            TextField("自定义名称(留空 = 接口名称)", text: $draftDisplayName)
+            HStack {
+                Text(model.tr("界面语言"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Picker(model.tr("界面语言"), selection: $draftAppLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.label).tag(language)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .help(model.tr("切换界面语言;「跟随系统」按系统首选语言决定"))
+            }
+
+            TextField(model.tr("自定义名称(留空 = 接口名称)"), text: $draftDisplayName)
                 .textFieldStyle(.roundedBorder)
                 .font(.caption)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text("配色方案")
+                    Text(model.tr("配色方案"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Picker("配色方案", selection: $draftColorPreset) {
+                    Picker(model.tr("配色方案"), selection: $draftColorPreset) {
                         ForEach(ColorPreset.allCases) { p in
-                            Text(p.label).tag(p)
+                            Text(p.label(model.localization)).tag(p)
                         }
                     }
                     .pickerStyle(.menu)
@@ -409,9 +426,9 @@ struct SettingsView: View {
                 }
                 if draftColorPreset == .custom {
                     HStack(spacing: 12) {
-                        ColorPicker("涨", selection: $draftUpColor, supportsOpacity: false)
-                        ColorPicker("跌", selection: $draftDownColor, supportsOpacity: false)
-                        ColorPicker("平", selection: $draftFlatColor, supportsOpacity: false)
+                        ColorPicker(model.tr("涨"), selection: $draftUpColor, supportsOpacity: false)
+                        ColorPicker(model.tr("跌"), selection: $draftDownColor, supportsOpacity: false)
+                        ColorPicker(model.tr("平"), selection: $draftFlatColor, supportsOpacity: false)
                     }
                     .font(.caption)
                     .controlSize(.small)
@@ -423,12 +440,12 @@ struct SettingsView: View {
     /// 轮显输入校验提示
     private var rotationHint: String? {
         let parsed = WatchlistRotation.normalize(draftWatchlistText)
-        if parsed.isEmpty { return "至少填写两个符号才会轮显;留空则沿用上方单只股票" }
-        if parsed.count == 1 { return "当前只有 1 个符号,不会轮显;再加一个即可" }
+        if parsed.isEmpty { return model.tr("至少填写两个符号才会轮显;留空则沿用上方单只股票") }
+        if parsed.count == 1 { return model.tr("当前只有 1 个符号,不会轮显;再加一个即可") }
         if parsed.count > 1 && parsed.count == WatchlistRotation.maxSymbols {
-            return "最多 \(WatchlistRotation.maxSymbols) 个符号,超出的已忽略"
+            return model.trf("最多 %d 个符号,超出的已忽略", WatchlistRotation.maxSymbols)
         }
-        return "共 \(parsed.count) 个符号,每 \(draftRotationInterval) 秒切换一次"
+        return model.trf("共 %d 个符号,每 %d 秒切换一次", parsed.count, draftRotationInterval)
     }
 
     // MARK: 草稿与保存
@@ -454,6 +471,7 @@ struct SettingsView: View {
         draftUpColor = model.upColor
         draftDownColor = model.downColor
         draftFlatColor = model.flatColor
+        draftAppLanguage = model.appLanguage
     }
 
     private func save() {
@@ -493,6 +511,7 @@ struct SettingsView: View {
         model.upColor = draftUpColor
         model.downColor = draftDownColor
         model.flatColor = draftFlatColor
+        model.appLanguage = draftAppLanguage
         onClose()
     }
 

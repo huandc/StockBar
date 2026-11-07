@@ -9,12 +9,12 @@ enum MenuBarFormat: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    func label(_ l10n: Localization) -> String {
         switch self {
-        case .price: return "价格"
-        case .codePrice: return "代码 + 价格"
-        case .namePrice: return "名称 + 价格"
-        case .custom: return "自定义模板"
+        case .price: return l10n.text("价格")
+        case .codePrice: return l10n.text("代码 + 价格")
+        case .namePrice: return l10n.text("名称 + 价格")
+        case .custom: return l10n.text("自定义模板")
         }
     }
 }

@@ -35,7 +35,7 @@ struct MenuBarLabel: View {
                 Image(systemName: symbol)
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(model.isFailing ? Color.orange : Color.secondary)
-                    .help(model.failureSummary ?? "当前使用备用数据源")
+                    .help(model.failureSummary ?? model.tr("当前使用备用数据源"))
             }
             Text(model.menuBarText)
                 .foregroundStyle(model.menuBarColor)

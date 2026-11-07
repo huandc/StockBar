@@ -3,13 +3,18 @@ import PackageDescription
 
 let package = Package(
     name: "StockBar",
+    // 默认语言为英文;中文文案放 zh-Hans.lproj,运行时由 Localization 显式取
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],
     targets: [
         .executableTarget(
             name: "StockBar",
-            path: "Sources/StockBar"
+            path: "Sources/StockBar",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "StockBarTests",

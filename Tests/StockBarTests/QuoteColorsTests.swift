@@ -54,6 +54,6 @@ struct QuoteColorsTests {
     func presetCases() {
         #expect(ColorPreset.allCases.count == 3)
         #expect(ColorPreset.allCases.map(\.rawValue) == ["international", "chinese", "custom"])
-        #expect(ColorPreset.allCases.allSatisfy { !$0.label.isEmpty })
+        #expect(ColorPreset.allCases.allSatisfy { !$0.label(.chinese).isEmpty })
     }
 }

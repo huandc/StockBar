@@ -27,22 +27,29 @@ struct RefreshStatusTests {
 
     @Test("休市时说明暂停原因")
     func pausedText() {
-        let text = RefreshStatus.nextRefreshText(next: time(30), now: now, isPaused: true, isFailing: false)
+        let text = RefreshStatus.nextRefreshText(
+            next: time(30), now: now, isPaused: true, isFailing: false, localization: .chinese)
         #expect(text == "休市暂停自动刷新,开盘后恢复")
     }
 
     @Test("没有排定下次刷新时不显示")
     func noApproachingText() {
-        #expect(RefreshStatus.nextRefreshText(next: nil, now: now, isPaused: false, isFailing: false) == nil)
+        #expect(
+            RefreshStatus.nextRefreshText(
+                next: nil, now: now, isPaused: false, isFailing: false, localization: .chinese) == nil)
         // 已经过期的时间也不再展示
-        #expect(RefreshStatus.nextRefreshText(next: time(-10), now: now, isPaused: false, isFailing: false) == nil)
+        #expect(
+            RefreshStatus.nextRefreshText(
+                next: time(-10), now: now, isPaused: false, isFailing: false, localization: .chinese) == nil)
     }
 
     @Test("正常与失败两种措辞")
     func normalAndRetryText() {
         let next = time(45)
-        let normal = RefreshStatus.nextRefreshText(next: next, now: now, isPaused: false, isFailing: false)
-        let retry = RefreshStatus.nextRefreshText(next: next, now: now, isPaused: false, isFailing: true)
+        let normal = RefreshStatus.nextRefreshText(
+            next: next, now: now, isPaused: false, isFailing: false, localization: .chinese)
+        let retry = RefreshStatus.nextRefreshText(
+            next: next, now: now, isPaused: false, isFailing: true, localization: .chinese)
         #expect(normal?.hasPrefix("下次刷新 ") == true)
         #expect(retry?.hasPrefix("将在 ") == true)
         #expect(retry?.hasSuffix(" 重试") == true)
@@ -53,12 +60,14 @@ struct RefreshStatusTests {
 
     @Test("失败摘要包含次数与原因")
     func failureSummary() {
-        #expect(RefreshStatus.failureText(consecutiveFailures: 0, reason: nil) == nil)
-        #expect(RefreshStatus.failureText(consecutiveFailures: 2, reason: "请求超时") == "连续失败 2 次:请求超时")
+        #expect(RefreshStatus.failureText(consecutiveFailures: 0, reason: nil, localization: .chinese) == nil)
+        #expect(
+            RefreshStatus.failureText(consecutiveFailures: 2, reason: "请求超时", localization: .chinese) == "连续失败 2 次:请求超时"
+        )
         // 没有原因词时退化为只报次数
-        #expect(RefreshStatus.failureText(consecutiveFailures: 3, reason: nil) == "刷新失败 3 次")
+        #expect(RefreshStatus.failureText(consecutiveFailures: 3, reason: nil, localization: .chinese) == "刷新失败 3 次")
         // 只有原因没有计数(理论上少见)时直接展示原因
-        #expect(RefreshStatus.failureText(consecutiveFailures: 0, reason: "网络不可用") == "网络不可用")
+        #expect(RefreshStatus.failureText(consecutiveFailures: 0, reason: "网络不可用", localization: .chinese) == "网络不可用")
     }
 
     @Test("时间文案使用本地时钟格式")
@@ -67,7 +76,8 @@ struct RefreshStatusTests {
         calendar.timeZone = Self.timeZone
         // 用当天稍晚的时间点,避免跨日导致「已过期」分支
         let target = calendar.date(bySettingHour: 23, minute: 30, second: 5, of: now)!
-        let text = RefreshStatus.nextRefreshText(next: target, now: now, isPaused: false, isFailing: false)
+        let text = RefreshStatus.nextRefreshText(
+            next: target, now: now, isPaused: false, isFailing: false, localization: .chinese)
         // 具体格式随系统区域变化(24 小时制 / 12 小时制),只断言时间点被带上
         #expect(text?.hasPrefix("下次刷新 ") == true)
         #expect(text?.contains("30:05") == true)

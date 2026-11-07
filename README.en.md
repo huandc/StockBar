@@ -59,6 +59,7 @@ Click the number in the menu bar to open the panel; ⚙️ in the top-right open
 | Trading sessions | Custom open/close times per market (defaults per exchange, editable) |
 | Menu bar max width | 120–400 pt slider, or unlimited |
 | Watchlist rotation | Toggle, symbol list, and rotation interval (5 / 10 / 30 / 60 s) |
+| Language | Follow System / 简体中文 / English, applied instantly |
 
 Symbol syntax: Shanghai `600519.SS`, Shenzhen `000001.SZ`, Hong Kong `0700.HK`, US tickers as-is (`AAPL`).
 

@@ -9,11 +9,11 @@ enum ColorPreset: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    func label(_ l10n: Localization) -> String {
         switch self {
-        case .international: return "国际(绿涨红跌)"
-        case .chinese: return "中国(红涨绿跌)"
-        case .custom: return "自定义"
+        case .international: return l10n.text("国际(绿涨红跌)")
+        case .chinese: return l10n.text("中国(红涨绿跌)")
+        case .custom: return l10n.text("自定义")
         }
     }
 

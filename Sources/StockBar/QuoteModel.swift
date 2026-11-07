@@ -107,7 +107,7 @@ final class QuoteModel: ObservableObject {
     var activeProvider: QuoteProvider { sourceStatus.active }
 
     /// 设置页展示的数据源状态说明
-    var sourceStatusText: String { sourceStatus.summary() }
+    var sourceStatusText: String { sourceStatus.summary(localization: localization) }
 
     /// 菜单栏显示格式(默认代码 + 价格,保持现状)
     @Published var menuBarFormat: MenuBarFormat {
@@ -128,6 +128,28 @@ final class QuoteModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(menuBarTemplate, forKey: "menuBarTemplate")
         }
+    }
+
+    /// 界面语言(跟随系统 / 简体中文 / English)
+    @Published var appLanguage: AppLanguage {
+        didSet {
+            UserDefaults.standard.set(appLanguage.rawValue, forKey: "appLanguage")
+        }
+    }
+
+    /// 当前生效的语言(把「跟随系统」解析成具体语言)
+    var localization: Localization {
+        Localization.resolve(appLanguage)
+    }
+
+    /// 取文案(中文原文作 key,英文界面走翻译表)
+    func tr(_ key: String) -> String {
+        localization.text(key)
+    }
+
+    /// 取带占位符的文案
+    func trf(_ key: String, _ args: CVarArg...) -> String {
+        localization.format(key, args)
     }
 
     /// 自定义显示名,留空使用接口返回的名称
@@ -215,6 +237,7 @@ final class QuoteModel: ObservableObject {
         menuBarMaxWidth = defaults.object(forKey: "menuBarMaxWidth") as? Double ?? MenuBarLayout.defaultMaxWidth
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
         displayName = defaults.string(forKey: "displayName") ?? ""
+        appLanguage = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .system
         watchlist = defaults.stringArray(forKey: "watchlist") ?? []
         rotationEnabled = defaults.object(forKey: "rotationEnabled") as? Bool ?? false
         rotationInterval = defaults.object(forKey: "rotationInterval") as? Int ?? 10
@@ -278,12 +301,12 @@ final class QuoteModel: ObservableObject {
         } catch {
             let fetchError = FetchError.map(error)
             consecutiveRefreshFailures += 1
-            lastFailureReason = fetchError.userFacingReason
+            lastFailureReason = fetchError.userFacingReason(localization)
             let failCount = consecutiveRefreshFailures
             QuoteLog.fetch.error(
                 "刷新失败 symbol=\(trimmed, privacy: .public) reason=\(fetchError.logReason, privacy: .public) failures=\(failCount, privacy: .public)"
             )
-            errorMessage = fetchError.localizedDescription
+            errorMessage = fetchError.message(localization)
         }
     }
 
@@ -309,8 +332,8 @@ final class QuoteModel: ObservableObject {
         } else {
             let failure = failures[shown] ?? failures.values.first ?? .noData
             consecutiveRefreshFailures += 1
-            lastFailureReason = failure.userFacingReason
-            errorMessage = failure.localizedDescription
+            lastFailureReason = failure.userFacingReason(localization)
+            errorMessage = failure.message(localization)
         }
         let failedCount = failures.count
         let total = list.count
@@ -384,7 +407,7 @@ final class QuoteModel: ObservableObject {
             sourceStatus.lastSwitch = SourceStatus.SwitchRecord(
                 from: previous,
                 to: backup,
-                reason: fetchError.userFacingReason,
+                reason: fetchError.userFacingReason(localization),
                 at: Date()
             )
             let q = try await backup.provider.fetch(symbol: symbol)
@@ -500,13 +523,18 @@ final class QuoteModel: ObservableObject {
             next: nextRefreshAt,
             now: Date(),
             isPaused: refreshOnlyInSession && !marketOpen,
-            isFailing: isFailing
+            isFailing: isFailing,
+            localization: localization
         )
     }
 
     /// 失败摘要:连续失败次数 + 最近原因
     var failureSummary: String? {
-        RefreshStatus.failureText(consecutiveFailures: consecutiveRefreshFailures, reason: lastFailureReason)
+        RefreshStatus.failureText(
+            consecutiveFailures: consecutiveRefreshFailures,
+            reason: lastFailureReason,
+            localization: localization
+        )
     }
 
     var menuBarColor: Color {
