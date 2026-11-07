@@ -90,7 +90,10 @@
 
 ## P3 — 国际化(中 / 英)
 
-- [ ] **应用内多语言与语言选项**：界面文案支持简体中文与英文,设置页可切换
+- [x] **应用内多语言与语言选项**：界面文案支持简体中文与英文,设置页可切换
+  - 2026-11-07 完成：`Localization.swift`(AppLanguage 三档 + 以中文原文为 key 的查表器)、
+    `Resources/{en,zh-Hans}.lproj/Localizable.strings`(各 76 条)、面板/错误/状态/菜单栏 tooltip 全部改走 `model.tr`/`model.trf`,
+    设置页新增语言 Picker;新增 6 个用例(含两份 strings 的 key 集合一致性检查)
   - 语言来源三档：跟随系统 / 简体中文 / English，默认「跟随系统」；选择持久化到 UserDefaults(key `appLanguage`）
   - 资源：`Sources/StockBar/Resources/` 下 `zh-Hans.lproj/Localizable.strings` 与 `en.lproj/Localizable.strings`，
     `Package.swift` 加 `defaultLocalization: "en"` 与 `resources: [.process("Resources")]`，运行时用 `Bundle.module`；
@@ -119,3 +122,4 @@
 - [x] 2026-11-02 接入 swift-format:统一 4 空格/120 列并全量格式化,CI 增加 lint --strict 检查与 scripts/format.sh
 - [x] 2026-11-03 README 英文版:新增 `README.en.md`(补齐轮显/宽度/失败状态),中英文互加语言切换,中文版同步新能力并改用 HTTPS clone;截图因环境无屏幕录制权限拆为独立条目
 - [x] 2026-11-04 Homebrew Cask:新增 Casks/stockbar.rb(含 livecheck/zap/caveats)与 check/update 两个脚本,CI 在改动 cask 时核对版本与 sha256
+- [x] 2026-11-07 应用内多语言:中英双语 strings + 设置页语言开关(跟随系统/中文/English),错误与状态文案按语言取;新增 key 一致性测试

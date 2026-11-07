@@ -30,22 +30,28 @@ struct SourceStatus: Equatable {
 
     /// 设置页展示的一行状态说明
     /// - Parameter now: 当前时间,用于把切换时间写成「3 分钟前」
-    func summary(now: Date = Date()) -> String {
+    func summary(now: Date = Date(), localization l10n: Localization) -> String {
         if isDegraded, let record = lastSwitch, record.to == active {
-            let when = Self.relative(record.at, now: now)
-            return "\(active.displayName) 代班 · \(record.from.displayName) \(record.reason),\(when)自动切换"
+            let when = Self.relative(record.at, now: now, localization: l10n)
+            return l10n.format(
+                "%@ 代班 · %@ %@,%@自动切换",
+                active.displayName(l10n), record.from.displayName(l10n), record.reason, when
+            )
         }
         if isDegraded {
-            return "\(active.displayName) 代班(\(selected.displayName) 不可用)"
+            return l10n.format("%@ 代班(%@ 不可用)", active.displayName(l10n), selected.displayName(l10n))
         }
         if consecutiveFailures > 0 {
             let remaining = max(Self.failureThreshold - consecutiveFailures, 0)
             if remaining == 0 {
-                return "\(active.displayName) · 连续失败 \(consecutiveFailures) 次,即将切换备用源"
+                return l10n.format("%@ · 连续失败 %d 次,即将切换备用源", active.displayName(l10n), consecutiveFailures)
             }
-            return "\(active.displayName) · 连续失败 \(consecutiveFailures) 次(再失败 \(remaining) 次切换备用源)"
+            return l10n.format(
+                "%@ · 连续失败 %d 次(再失败 %d 次切换备用源)",
+                active.displayName(l10n), consecutiveFailures, remaining
+            )
         }
-        return "\(active.displayName) · 正常"
+        return l10n.format("%@ · 正常", active.displayName(l10n))
     }
 
     /// 后台日志用的单行状态,便于和 `log stream` 对齐
@@ -58,11 +64,11 @@ struct SourceStatus: Equatable {
     }
 
     /// 把时间点写成「刚刚 / N 分钟前 / N 小时前」,超过一天用日期
-    static func relative(_ date: Date, now: Date) -> String {
+    static func relative(_ date: Date, now: Date, localization l10n: Localization) -> String {
         let seconds = now.timeIntervalSince(date)
-        if seconds < 60 { return "刚刚" }
-        if seconds < 3600 { return "\(Int(seconds / 60)) 分钟前" }
-        if seconds < 86_400 { return "\(Int(seconds / 3600)) 小时前" }
+        if seconds < 60 { return l10n.text("刚刚") }
+        if seconds < 3600 { return l10n.format("%d 分钟前", Int(seconds / 60)) }
+        if seconds < 86_400 { return l10n.format("%d 小时前", Int(seconds / 3600)) }
         let formatter = DateFormatter()
         formatter.dateFormat = "MM-dd HH:mm"
         return formatter.string(from: date)

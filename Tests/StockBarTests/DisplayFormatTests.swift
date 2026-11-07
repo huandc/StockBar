@@ -61,6 +61,6 @@ struct DisplayFormatTests {
     func menuBarFormats() {
         #expect(MenuBarFormat.allCases.count == 4)
         #expect(MenuBarFormat.allCases.map(\.id) == ["price", "codePrice", "namePrice", "custom"])
-        #expect(MenuBarFormat.allCases.allSatisfy { !$0.label.isEmpty })
+        #expect(MenuBarFormat.allCases.allSatisfy { !$0.label(.chinese).isEmpty })
     }
 }

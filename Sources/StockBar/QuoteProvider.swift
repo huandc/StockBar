@@ -13,20 +13,21 @@ struct Quote: Codable {
     var changePercent: Double { previousClose > 0 ? change / previousClose * 100 : 0 }
 }
 
-enum FetchError: LocalizedError, Equatable {
+enum FetchError: Error, Equatable {
     case http(Int)
     case api(String)
     case noData
     case timeout
     case network(String)
 
-    var errorDescription: String? {
+    /// 面向用户的错误说明(随语言选项变化)
+    func message(_ l10n: Localization) -> String {
         switch self {
-        case .http(let code): return "网络错误(HTTP \(code))"
-        case .api(let msg): return "接口错误:\(msg)"
-        case .noData: return "未获取到行情,请检查股票代码是否有效"
-        case .timeout: return "请求超时(网络较慢或数据源无响应)"
-        case .network(let msg): return "网络错误:\(msg)"
+        case .http(let code): return l10n.format("网络错误(HTTP %d)", code)
+        case .api(let msg): return l10n.format("接口错误:%@", msg)
+        case .noData: return l10n.text("未获取到行情,请检查股票代码是否有效")
+        case .timeout: return l10n.text("请求超时(网络较慢或数据源无响应)")
+        case .network(let msg): return l10n.format("网络错误:%@", msg)
         }
     }
 
@@ -42,15 +43,15 @@ enum FetchError: LocalizedError, Equatable {
     }
 
     /// 面向用户的原因短句(设置页展示数据源状态时使用,比 errorDescription 更短)
-    var userFacingReason: String {
+    func userFacingReason(_ l10n: Localization) -> String {
         switch self {
-        case .http(429): return "请求过于频繁"
-        case .http(let code) where code >= 500: return "服务端错误 \(code)"
+        case .http(429): return l10n.text("请求过于频繁")
+        case .http(let code) where code >= 500: return l10n.format("服务端错误 %d", code)
         case .http(let code): return "HTTP \(code)"
-        case .api: return "接口返回异常"
-        case .noData: return "无有效行情数据"
-        case .timeout: return "请求超时"
-        case .network: return "网络不可用"
+        case .api: return l10n.text("接口返回异常")
+        case .noData: return l10n.text("无有效行情数据")
+        case .timeout: return l10n.text("请求超时")
+        case .network: return l10n.text("网络不可用")
         }
     }
 
@@ -90,11 +91,17 @@ enum QuoteProvider: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// 规范名(英文名固定,中文名走翻译表)
     var displayName: String {
         switch self {
         case .yahoo: return "Yahoo Finance"
         case .eastmoney: return "东方财富"
         }
+    }
+
+    /// 按当前语言展示的数据源名
+    func displayName(_ l10n: Localization) -> String {
+        l10n.text(displayName)
     }
 
     var provider: any QuoteProviding {

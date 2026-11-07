@@ -189,9 +189,9 @@ struct QuoteHTTPTests {
 
     @Test("用户可见文案能说明是超时还是解析失败")
     func errorDescriptions() {
-        #expect(FetchError.timeout.errorDescription?.contains("超时") == true)
-        #expect(FetchError.noData.errorDescription?.contains("未获取到行情") == true)
-        #expect(FetchError.http(503).errorDescription?.contains("503") == true)
+        #expect(FetchError.timeout.message(.chinese).contains("超时"))
+        #expect(FetchError.noData.message(.chinese).contains("未获取到行情"))
+        #expect(FetchError.http(503).message(.chinese).contains("503"))
     }
 
     @Test("Yahoo 解析:成功响应转成 Quote")
