@@ -130,6 +130,18 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 价格提醒(按设置顺序持久化)
+    @Published private(set) var alerts: [PriceAlert] {
+        didSet {
+            if let data = try? JSONEncoder().encode(alerts) {
+                UserDefaults.standard.set(data, forKey: "priceAlerts")
+            }
+        }
+    }
+
+    /// 已触发、尚未回落的提醒(面板与菜单栏用)
+    var triggeredAlerts: [PriceAlert] { alerts.filter { !$0.isArmed } }
+
     /// 界面语言(跟随系统 / 简体中文 / English)
     @Published var appLanguage: AppLanguage {
         didSet {
@@ -238,6 +250,13 @@ final class QuoteModel: ObservableObject {
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
         displayName = defaults.string(forKey: "displayName") ?? ""
         appLanguage = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .system
+        if let data = defaults.data(forKey: "priceAlerts"),
+            let saved = try? JSONDecoder().decode([PriceAlert].self, from: data)
+        {
+            alerts = saved
+        } else {
+            alerts = []
+        }
         watchlist = defaults.stringArray(forKey: "watchlist") ?? []
         rotationEnabled = defaults.object(forKey: "rotationEnabled") as? Bool ?? false
         rotationInterval = defaults.object(forKey: "rotationInterval") as? Int ?? 10
@@ -298,13 +317,50 @@ final class QuoteModel: ObservableObject {
         } else {
             await refreshRotation(list)
         }
+        evaluateAlerts()
+    }
+
+    // MARK: 价格提醒
+
+    /// 加一条提醒;同一代码+方向+价格重复时忽略
+    func addAlert(symbol rawSymbol: String, threshold: Double, direction: AlertDirection) {
+        let trimmed = rawSymbol.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard !trimmed.isEmpty, threshold > 0 else { return }
+        let duplicated = alerts.contains {
+            $0.symbol == trimmed && $0.direction == direction && abs($0.threshold - threshold) < 0.0001
+        }
+        guard !duplicated else { return }
+        alerts.append(PriceAlert(symbol: trimmed, threshold: threshold, direction: direction))
+    }
+
+    func removeAlert(id: UUID) {
+        alerts.removeAll { $0.id == id }
+    }
+
+    /// 用当前已知价格评估所有提醒;触发与回落都写日志便于排查
+    private func evaluateAlerts() {
+        guard !alerts.isEmpty else { return }
+        var prices: [String: Double] = [:]
+        for (symbol, cached) in watchQuotes { prices[symbol] = cached.price }
+        if let current = quote { prices[current.symbol] = current.price }
+        let events = AlertEvaluator.evaluate(&alerts, priceFor: { prices[$0] })
+        for event in events {
+            switch event {
+            case .triggered(let alert):
+                QuoteLog.fetch.notice(
+                    "价格提醒触发 \(alert.symbol, privacy: .public) \(alert.direction.rawValue, privacy: .public) \(alert.threshold, privacy: .public)"
+                )
+            case .rearmed(let alert):
+                QuoteLog.fetch.notice("价格提醒复位 \(alert.symbol, privacy: .public) \(alert.threshold, privacy: .public)")
+            }
+        }
     }
 
     /// 单符号刷新(原有逻辑)
     private func refreshSingle(_ rawSymbol: String) async {
         let trimmed = rawSymbol.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            errorMessage = "请输入股票代码"
+            errorMessage = tr("请输入股票代码")
             return
         }
         do {

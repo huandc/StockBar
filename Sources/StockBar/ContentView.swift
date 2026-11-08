@@ -90,6 +90,21 @@ struct ContentView: View {
                 .multilineTextAlignment(.center)
         }
 
+        if !model.triggeredAlerts.isEmpty {
+            VStack(spacing: 2) {
+                ForEach(model.triggeredAlerts) { alert in
+                    HStack(spacing: 4) {
+                        Image(systemName: "bell.badge.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.orange)
+                        Text(alert.line(model.localization))
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+            }
+        }
+
         if let err = model.errorMessage {
             Text(err)
                 .font(.caption)
@@ -157,6 +172,9 @@ struct SettingsView: View {
     @State private var draftDownColor = ColorPreset.defaultDown
     @State private var draftFlatColor = ColorPreset.defaultFlat
     @State private var draftAppLanguage: AppLanguage = .system
+    @State private var draftAlertSymbol = ""
+    @State private var draftAlertDirection: AlertDirection = .above
+    @State private var draftAlertThreshold = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -171,7 +189,10 @@ struct SettingsView: View {
                 Spacer()
             }
             Divider()
-            settings
+            ScrollView {
+                settings
+            }
+            .frame(maxHeight: 520)
             Divider()
             HStack {
                 Spacer()
@@ -434,7 +455,81 @@ struct SettingsView: View {
                     .controlSize(.small)
                 }
             }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.tr("价格提醒"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if model.alerts.isEmpty {
+                    Text(model.tr("暂无提醒"))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                } else {
+                    ForEach(model.alerts) { alert in
+                        HStack(spacing: 6) {
+                            Text(alert.symbol)
+                                .font(.caption.monospaced())
+                            Text(alert.direction.label(model.localization))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(String(format: "%.2f", alert.threshold))
+                                .font(.caption.monospaced())
+                            Spacer()
+                            if !alert.isArmed {
+                                Text(model.tr("已触发"))
+                                    .font(.caption2)
+                                    .foregroundStyle(.orange)
+                            }
+                            Button {
+                                model.removeAlert(id: alert.id)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.secondary)
+                            .help(model.tr("删除"))
+                        }
+                    }
+                }
+                HStack(spacing: 6) {
+                    TextField(model.symbol, text: $draftAlertSymbol)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption.monospaced())
+                        .frame(width: 92)
+                    Picker("", selection: $draftAlertDirection) {
+                        ForEach(AlertDirection.allCases) { direction in
+                            Text(direction.label(model.localization)).tag(direction)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .fixedSize()
+                    TextField(model.tr("价格"), text: $draftAlertThreshold)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption.monospaced())
+                        .frame(width: 74)
+                    Button(model.tr("添加")) {
+                        addAlertDraft()
+                    }
+                    .controlSize(.small)
+                }
+                Text(model.tr("价格穿越阈值时触发,回到另一侧后自动恢复"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
+    }
+
+    /// 把输入框里的代码与价格变成一条提醒
+    private func addAlertDraft() {
+        guard let threshold = Double(draftAlertThreshold.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return
+        }
+        let symbol = draftAlertSymbol.isEmpty ? model.symbol : draftAlertSymbol
+        model.addAlert(symbol: symbol, threshold: threshold, direction: draftAlertDirection)
+        draftAlertThreshold = ""
     }
 
     /// 轮显输入校验提示
