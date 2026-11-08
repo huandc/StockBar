@@ -77,3 +77,12 @@
 "连续失败 %d 次:%@" = "%d consecutive failures: %@";
 "休市暂停自动刷新,开盘后恢复" = "Market closed — auto refresh paused until it opens";
 "当前使用备用数据源" = "Using the backup source";
+"价格提醒" = "Price alerts";
+"上破" = "Crosses above";
+"下破" = "Crosses below";
+"已触发" = "Triggered";
+"暂无提醒" = "No alerts yet";
+"添加" = "Add";
+"删除" = "Delete";
+"价格穿越阈值时触发,回到另一侧后自动恢复" = "Fires when the price crosses the threshold; re-arms after it returns to the other side";
+"%@ %@ %@ 已触发" = "%@ %@ %@ triggered";

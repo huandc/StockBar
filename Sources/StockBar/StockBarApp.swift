@@ -51,6 +51,12 @@ struct MenuBarLabel: View {
                     .foregroundStyle(model.isFailing ? Color.orange : Color.secondary)
                     .help(model.failureSummary ?? model.tr("当前使用备用数据源"))
             }
+            if !model.triggeredAlerts.isEmpty {
+                Image(systemName: "bell.badge.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color.orange)
+                    .help(model.triggeredAlerts.first?.line(model.localization) ?? "")
+            }
             Text(model.menuBarText)
                 .foregroundStyle(model.menuBarColor)
                 .font(.system(size: 12, weight: .medium, design: .monospaced))

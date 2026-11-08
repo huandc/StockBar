@@ -27,6 +27,7 @@ Data sources: [Yahoo Finance](https://finance.yahoo.com/) by default, or **EastM
 - **Watchlist rotation**: cycle several symbols in the menu bar on an interval, from cached quotes (no extra requests)
 - **Width-aware menu bar**: long names are truncated from the front so the price always survives
 - **Honest failure states**: a warning icon plus "retry at 21:30:05" instead of a silently frozen number
+- **Price alerts**: a bell in the menu bar when a price crosses your up/down threshold; re-arms after the price returns
 
 What it looks like:
 
@@ -69,6 +70,7 @@ Click the number in the menu bar to open the panel; ⚙️ in the top-right open
 | Menu bar max width | 120–400 pt slider, or unlimited |
 | Watchlist rotation | Toggle, symbol list, and rotation interval (5 / 10 / 30 / 60 s) |
 | Language | Follow System / 简体中文 / English, applied instantly |
+| Price alerts | Up/down thresholds; the menu bar shows a bell while triggered, re-armed after the price returns |
 
 Symbol syntax: Shanghai `600519.SS`, Shenzhen `000001.SZ`, Hong Kong `0700.HK`, US tickers as-is (`AAPL`).
 

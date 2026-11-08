@@ -113,6 +113,15 @@
     ③`FetchError` 六种原因在两语言下都非空 ④切换语言后 `menuBarText` 与状态行变化
   - 验收：设置里切到 English，面板、错误提示、降级状态、失败重试文案全为英文且无中文残留；切回中文恢复；
     `./scripts/test.sh` 通过；新增 key 一致性检查接入 `pr-check.yml`（或单测）"
+## P4 — 功能扩展
+
+- [x] **价格提醒**:上破 / 下破阈值时在菜单栏显示铃铛、面板标出触发原因,价格回到阈值另一侧自动复位
+  - 2026-11-08 完成:`PriceAlert.swift`(`AlertDirection` + `PriceAlert` + 纯函数 `AlertEvaluator`),
+    `isArmed` 状态机避免「一直高于阈值就每轮重复提醒」;`QuoteModel` 持久化到 UserDefaults(key `priceAlerts`),
+    每次刷新后用当前行情(轮显缓存 + 当前只)评估;菜单栏加铃铛、面板列触发行、设置页可增删;新增 7 个用例
+- [ ] **分时迷你走势图**:面板里画最近几个小时的走势(只在交易时段拉取,失败回退为不显示)
+- [ ] **发布 v1.1.0**:把双语、轮显、提醒、Cask 打包成一个版本,更新 `Casks/stockbar.rb`
+
 ## 已完成
 
 - [x] 2026-08-14 初版：菜单栏展示、多数据源（Yahoo / 东方财富）、格式与配色可配置
@@ -129,3 +138,4 @@
 - [x] 2026-11-04 Homebrew Cask:新增 Casks/stockbar.rb(含 livecheck/zap/caveats)与 check/update 两个脚本,CI 在改动 cask 时核对版本与 sha256
 - [x] 2026-11-07 应用内多语言:中英双语 strings + 设置页语言开关(跟随系统/中文/English),错误与状态文案按语言取;新增 key 一致性测试
 - [x] 2026-11-07 README 截图:新增 DocSnapshots 离屏渲染(ImageRenderer)与 scripts/screenshots.sh,生成菜单栏/面板两张图并嵌入中英 README;新增 3 个确定性用例
+- [x] 2026-11-08 价格提醒:新增 PriceAlert/AlertEvaluator(带复位状态机),菜单栏铃铛 + 面板触发行 + 设置页增删,设置页改为可滚动;新增 7 个用例
