@@ -28,6 +28,7 @@ Data sources: [Yahoo Finance](https://finance.yahoo.com/) by default, or **EastM
 - **Width-aware menu bar**: long names are truncated from the front so the price always survives
 - **Honest failure states**: a warning icon plus "retry at 21:30:05" instead of a silently frozen number
 - **Price alerts**: a bell in the menu bar when a price crosses your up/down threshold; re-arms after the price returns
+- **Session sparkline**: the panel plots the prices this run has seen (memory only — it rebuilds after a restart, since the quote APIs carry no intraday series)
 
 What it looks like:
 

@@ -70,6 +70,8 @@ struct ContentView: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(model.changeColor(q))
 
+            sparkline(for: q)
+
             if let t = q.marketTime {
                 Text(model.trf("行情时间 %@", t.formatted(date: .omitted, time: .standard)))
                     .font(.caption2)
@@ -122,6 +124,36 @@ struct ContentView: View {
             Text(model.tr("当前休市,暂停自动刷新"))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
+        }
+    }
+
+    /// 本次运行期间的价格小走势;采样不足两个点时不显示
+    @ViewBuilder
+    private func sparkline(for quote: Quote) -> some View {
+        let points = model.trend(for: quote.symbol).normalizedPoints()
+        if points.count >= 2 {
+            GeometryReader { geo in
+                Path { path in
+                    for (index, point) in points.enumerated() {
+                        let position = CGPoint(
+                            x: point.x * geo.size.width,
+                            y: (1 - point.y) * geo.size.height
+                        )
+                        if index == 0 {
+                            path.move(to: position)
+                        } else {
+                            path.addLine(to: position)
+                        }
+                    }
+                }
+                .stroke(
+                    model.changeColor(quote),
+                    style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round)
+                )
+            }
+            .frame(height: 34)
+            .padding(.horizontal, 4)
+            .accessibilityLabel(model.tr("最近价格走势"))
         }
     }
 

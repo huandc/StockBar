@@ -55,7 +55,11 @@ enum DocSnapshots {
             ),
             symbol: "600519.SS",
             lastUpdated: marketTime,
-            nextRefreshAt: nextRefresh
+            nextRefreshAt: nextRefresh,
+            trend: [
+                1341.20, 1340.55, 1342.10, 1343.05, 1342.40, 1340.90, 1339.75, 1340.60, 1342.35, 1343.50, 1342.80,
+                1341.99,
+            ]
         )
         return model
     }
