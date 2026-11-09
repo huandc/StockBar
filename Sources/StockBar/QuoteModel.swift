@@ -130,6 +130,9 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 本次运行期间的价格采样(仅内存,用于面板小走势图)
+    private(set) var trends: [String: PriceTrend] = [:]
+
     /// 价格提醒(按设置顺序持久化)
     @Published private(set) var alerts: [PriceAlert] {
         didSet {
@@ -281,12 +284,19 @@ final class QuoteModel: ObservableObject {
     /// 仅用于 `DocSnapshots` 渲染文档图片,正常运行时不会调用。
     func seedPreview(
         quote previewQuote: Quote, symbol previewSymbol: String, lastUpdated updated: Date?,
-        nextRefreshAt next: Date? = nil
+        nextRefreshAt next: Date? = nil, trend prices: [Double] = []
     ) {
         symbol = previewSymbol
         quote = previewQuote
         lastUpdated = updated
         nextRefreshAt = next
+        if !prices.isEmpty {
+            var seeded = PriceTrend()
+            for (index, price) in prices.enumerated() {
+                seeded.append(PriceSample(at: Date(timeIntervalSince1970: Double(index) * 10), price: price))
+            }
+            trends[previewSymbol] = seeded
+        }
         errorMessage = nil
         consecutiveRefreshFailures = 0
         lastFailureReason = nil
@@ -337,6 +347,18 @@ final class QuoteModel: ObservableObject {
         alerts.removeAll { $0.id == id }
     }
 
+    /// 记录一次采样(按代码分桶)
+    private func recordSample(for fetched: Quote) {
+        var trend = trends[fetched.symbol] ?? PriceTrend()
+        trend.append(PriceSample(at: Date(), price: fetched.price))
+        trends[fetched.symbol] = trend
+    }
+
+    /// 面板小走势图用的采样;当前只没有采样时返回空
+    func trend(for symbol: String) -> PriceTrend {
+        trends[symbol] ?? PriceTrend()
+    }
+
     /// 用当前已知价格评估所有提醒;触发与回落都写日志便于排查
     private func evaluateAlerts() {
         guard !alerts.isEmpty else { return }
@@ -364,7 +386,9 @@ final class QuoteModel: ObservableObject {
             return
         }
         do {
-            quote = try await fetchWithFallback(trimmed)
+            let fetched = try await fetchWithFallback(trimmed)
+            quote = fetched
+            recordSample(for: fetched)
             errorMessage = nil
             lastUpdated = Date()
             consecutiveRefreshFailures = 0
@@ -393,6 +417,9 @@ final class QuoteModel: ObservableObject {
             }
         }
         watchQuotes = cache
+        for (symbol, fetched) in cache where failures[symbol] == nil {
+            recordSample(for: fetched)
+        }
         let shown = displayedSymbol
         if let q = cache[shown] {
             quote = q

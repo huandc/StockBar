@@ -86,3 +86,4 @@
 "删除" = "Delete";
 "价格穿越阈值时触发,回到另一侧后自动恢复" = "Fires when the price crosses the threshold; re-arms after it returns to the other side";
 "%@ %@ %@ 已触发" = "%@ %@ %@ triggered";
+"最近价格走势" = "Recent price trend";

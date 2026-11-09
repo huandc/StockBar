@@ -119,7 +119,10 @@
   - 2026-11-08 完成:`PriceAlert.swift`(`AlertDirection` + `PriceAlert` + 纯函数 `AlertEvaluator`),
     `isArmed` 状态机避免「一直高于阈值就每轮重复提醒」;`QuoteModel` 持久化到 UserDefaults(key `priceAlerts`),
     每次刷新后用当前行情(轮显缓存 + 当前只)评估;菜单栏加铃铛、面板列触发行、设置页可增删;新增 7 个用例
-- [ ] **分时迷你走势图**:面板里画最近几个小时的走势(只在交易时段拉取,失败回退为不显示)
+- [x] **分时迷你走势图**:面板里画本次运行的采样走势
+  - 2026-11-09 完成:`PriceTrend.swift`(定长采样 `maxSamples = 120`、同时间点覆盖、归一化为 0–1 坐标),
+    `QuoteModel` 按代码分桶记录成功刷新(轮显也记录),`ContentView` 用 `Path` 画 34pt 高的折线并按涨跌着色;
+    明确只保留内存(行情接口不分时数据,不做磁盘缓存),点数不足 2 或不涨不跌时不画;新增 5 个用例
 - [ ] **发布 v1.1.0**:把双语、轮显、提醒、Cask 打包成一个版本,更新 `Casks/stockbar.rb`
 
 ## 已完成
@@ -139,3 +142,4 @@
 - [x] 2026-11-07 应用内多语言:中英双语 strings + 设置页语言开关(跟随系统/中文/English),错误与状态文案按语言取;新增 key 一致性测试
 - [x] 2026-11-07 README 截图:新增 DocSnapshots 离屏渲染(ImageRenderer)与 scripts/screenshots.sh,生成菜单栏/面板两张图并嵌入中英 README;新增 3 个确定性用例
 - [x] 2026-11-08 价格提醒:新增 PriceAlert/AlertEvaluator(带复位状态机),菜单栏铃铛 + 面板触发行 + 设置页增删,设置页改为可滚动;新增 7 个用例
+- [x] 2026-11-09 分时小走势:新增 PriceTrend(定长采样/归一化),面板画本次运行的折线并按涨跌着色,文档图同步更新;新增 5 个用例
