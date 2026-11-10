@@ -1,6 +1,6 @@
 cask "stockbar" do
-  version "1.0.0"
-  sha256 "aea6f7283daed579a65ed9dd35adaf96aa1c589768af64244da573cc0e5a9eaf"
+  version "1.1.0"
+  sha256 "f6add5a96a805f97423c6423d3d99d272bb1ea5ab142b983d572a33487f0713c"
 
   url "https://github.com/huandc/StockBar/releases/download/v#{version}/StockBar-#{version}-macOS.zip"
   name "StockBar"
