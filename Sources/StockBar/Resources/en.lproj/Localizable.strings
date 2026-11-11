@@ -87,3 +87,8 @@
 "价格穿越阈值时触发,回到另一侧后自动恢复" = "Fires when the price crosses the threshold; re-arms after it returns to the other side";
 "%@ %@ %@ 已触发" = "%@ %@ %@ triggered";
 "最近价格走势" = "Recent price trend";
+"诊断" = "Diagnostics";
+"复制诊断信息" = "Copy diagnostics";
+"已复制到剪贴板" = "Copied to clipboard";
+"把版本、数据源状态、连续失败次数与当前设置复制到剪贴板,便于贴进 Issue" = "Copy version, source status, failure count and settings to the clipboard for bug reports";
+"只含版本、数据源状态与当前设置,不含历史记录与自选列表内容" = "Contains version, source status and settings only — no history and no watchlist symbols";

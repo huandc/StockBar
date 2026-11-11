@@ -72,6 +72,7 @@ Click the number in the menu bar to open the panel; ⚙️ in the top-right open
 | Watchlist rotation | Toggle, symbol list, and rotation interval (5 / 10 / 30 / 60 s) |
 | Language | Follow System / 简体中文 / English, applied instantly |
 | Price alerts | Up/down thresholds; the menu bar shows a bell while triggered, re-armed after the price returns |
+| Diagnostics | One click copies version, source status, failure count and current settings to the clipboard |
 
 Symbol syntax: Shanghai `600519.SS`, Shenzhen `000001.SZ`, Hong Kong `0700.HK`, US tickers as-is (`AAPL`).
 
@@ -95,6 +96,7 @@ Only Foundation, SwiftUI and AppKit are used — there are no third-party depend
 - **Yahoo unreachable?** Switch to EastMoney, or enable automatic failover
 - **Orange warning icon?** The last refresh failed; hover it to see why, and the panel shows when the next retry happens
 - **How do I quit?** Panel → **Quit** (the app has no Dock icon)
+- **Want to report a bug?** Open Settings and click "Copy diagnostics" at the bottom, then paste it into the issue
 - **Supported systems?** macOS 13 and newer
 
 ## 🤝 Contributing

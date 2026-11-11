@@ -1,7 +1,7 @@
 import Foundation
 
 /// 一只股票的最新行情(各数据源统一返回该模型)
-struct Quote: Codable {
+struct Quote: Codable, Equatable {
     let symbol: String
     let price: Double
     let previousClose: Double
