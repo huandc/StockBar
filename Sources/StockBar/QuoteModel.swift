@@ -167,6 +167,40 @@ final class QuoteModel: ObservableObject {
         localization.format(key, args)
     }
 
+    // MARK: 诊断
+
+    /// 当前运行状态的一次性快照(供「复制诊断信息」与测试使用)
+    var diagnosticsSnapshot: DiagnosticsSnapshot {
+        DiagnosticsSnapshot(
+            version: DiagnosticsReport.appVersion(),
+            osVersion: ProcessInfo.processInfo.operatingSystemVersionString,
+            languageSetting: appLanguage.rawValue,
+            language: localization.language.rawValue,
+            symbol: displayedSymbol,
+            quote: quote,
+            lastUpdated: lastUpdated,
+            selectedProvider: selectedProvider.displayName(localization),
+            activeProvider: activeProvider.displayName(localization),
+            sourceStatusLine: sourceStatus.isDegraded ? sourceStatusText : nil,
+            consecutiveFailures: consecutiveRefreshFailures,
+            lastFailureReason: lastFailureReason,
+            refreshInterval: refreshInterval,
+            refreshOnlyInSession: refreshOnlyInSession,
+            marketOpen: marketOpen,
+            watchlistCount: watchlist.count,
+            rotationEnabled: rotationEnabled,
+            rotationInterval: rotationInterval,
+            alertCount: alerts.count,
+            triggeredAlertCount: triggeredAlerts.count,
+            trendSampleCount: trend(for: displayedSymbol).samples.count
+        )
+    }
+
+    /// 渲染成可直接贴进 Issue 的多行文本
+    func diagnosticsText(now: Date = Date(), timeZone: TimeZone = .current) -> String {
+        DiagnosticsReport.text(diagnosticsSnapshot, generatedAt: now, timeZone: timeZone)
+    }
+
     /// 自定义显示名,留空使用接口返回的名称
     @Published var displayName: String {
         didSet {

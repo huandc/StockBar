@@ -207,6 +207,8 @@ struct SettingsView: View {
     @State private var draftAlertSymbol = ""
     @State private var draftAlertDirection: AlertDirection = .above
     @State private var draftAlertThreshold = ""
+    /// 「复制诊断信息」按钮的短暂成功提示
+    @State private var diagnosticsCopied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -551,6 +553,43 @@ struct SettingsView: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
+
+            Divider()
+
+            // 反馈问题时用:把版本、数据源状态、连续失败次数与当前设置一次复制走
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.tr("诊断"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Button(model.tr("复制诊断信息")) {
+                        copyDiagnostics()
+                    }
+                    .controlSize(.small)
+                    .help(model.tr("把版本、数据源状态、连续失败次数与当前设置复制到剪贴板,便于贴进 Issue"))
+                    if diagnosticsCopied {
+                        Text(model.tr("已复制到剪贴板"))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                Text(model.tr("只含版本、数据源状态与当前设置,不含历史记录与自选列表内容"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    /// 把诊断信息写进剪贴板,方便直接贴到 Issue 里
+    private func copyDiagnostics() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(model.diagnosticsText(), forType: .string)
+        diagnosticsCopied = true
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            diagnosticsCopied = false
         }
     }
 
