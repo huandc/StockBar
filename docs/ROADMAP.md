@@ -138,7 +138,12 @@
     标签用英文、时间用 ISO 8601 带时区;版本读 `CFBundleShortVersionString`,本地运行回退 `dev`),
     `QuoteModel.diagnosticsSnapshot/diagnosticsText`,`ContentView` 设置页底部「复制诊断信息」按钮(NSPasteboard,2 秒成功提示);
     明确只含版本/状态/设置,不含历史记录与自选列表内容;新增 4 个用例
-- [ ] **设置导入导出**:把全部设置序列化成一份 JSON,支持导出/导入,方便换机与多机同步
+- [x] **设置导入导出**:把全部设置序列化成一份 JSON,支持导出/导入,方便换机与多机同步
+  - 2026-11-12 完成:`SettingsTransfer.swift`(`SettingsSnapshot` 带 `settingsVersion`;手写解码让缺字段取默认值、
+    多余字段忽略,旧导出仍可导入),`sanitized()` 把未知数据源/越界宽度/坏时段/非法提醒收敛到可用值而不是整份失败,
+    `SettingsTransfer.encode/decode` 为纯函数;`QuoteModel.settingsSnapshot/exportSettingsText/importSettings/apply`
+    返回实际改动字段数;`ContentView` 设置页「设置备份」区:复制 JSON 与从剪贴板导入,失败时保留原设置并提示原因;
+    新增 5 个用例(往返、缺字段、越界收敛、空时段关开关、错误分支)
 - [ ] **菜单栏点击行为可配置**:默认弹面板,可改成「立即刷新」或「切到下一个符号」
 - [ ] **发布 v1.2.0**:收齐下一批功能后按 v1.1.0 的流程发版
 
@@ -162,3 +167,4 @@
 - [x] 2026-11-09 分时小走势:新增 PriceTrend(定长采样/归一化),面板画本次运行的折线并按涨跌着色,文档图同步更新;新增 5 个用例
 - [x] 2026-11-10 发布 v1.1.0:release 分支触发打包与 Release(资产 339KB),Cask 版本与 sha256 同步,git-cliff 生成发布说明
 - [x] 2026-11-11 诊断信息一键复制:新增 `Diagnostics`(纯函数快照渲染),设置页按钮把版本/数据源状态/失败次数/设置复制进剪贴板;新增 4 个用例
+- [x] 2026-11-12 设置导入导出:新增 SettingsTransfer(带版本号的可移植 JSON,非法值收敛),设置页支持复制/导入并报告改动项数;新增 5 个用例

@@ -201,6 +201,134 @@ final class QuoteModel: ObservableObject {
         DiagnosticsReport.text(diagnosticsSnapshot, generatedAt: now, timeZone: timeZone)
     }
 
+    // MARK: 设置导入导出
+
+    /// 当前设置的可移植快照(不含行情、历史与运行期采样)
+    func settingsSnapshot() -> SettingsSnapshot {
+        SettingsSnapshot(
+            symbol: symbol,
+            provider: selectedProvider.rawValue,
+            enableFallback: enableFallback,
+            refreshInterval: refreshInterval,
+            refreshOnlyInSession: refreshOnlyInSession,
+            customSessionsEnabled: customSessionsEnabled,
+            customSessions: customSessions,
+            menuBarFormat: menuBarFormat.rawValue,
+            menuBarTemplate: menuBarTemplate,
+            menuBarMaxWidth: menuBarMaxWidth,
+            watchlist: watchlist,
+            rotationEnabled: rotationEnabled,
+            rotationInterval: rotationInterval,
+            displayName: displayName,
+            colorPreset: colorPreset.rawValue,
+            upColor: upColor.rgb,
+            downColor: downColor.rgb,
+            flatColor: flatColor.rgb,
+            appLanguage: appLanguage.rawValue,
+            alerts: alerts
+        )
+    }
+
+    /// 序列化成 JSON 文本,供复制或落盘备份
+    func exportSettingsText() -> String {
+        SettingsTransfer.encode(settingsSnapshot())
+    }
+
+    /// 解析并导入 JSON 设置;失败时原样保留当前设置,返回实际改变的字段数
+    @discardableResult
+    func importSettings(from text: String) throws -> Int {
+        apply(try SettingsTransfer.decode(text))
+    }
+
+    /// 把一份(已收敛的)快照写回当前设置
+    @discardableResult
+    func apply(_ snapshot: SettingsSnapshot) -> Int {
+        var changed = 0
+
+        if snapshot.symbol != symbol {
+            symbol = snapshot.symbol
+            changed += 1
+        }
+        if let provider = QuoteProvider(rawValue: snapshot.provider), provider != selectedProvider {
+            selectedProvider = provider
+            changed += 1
+        }
+        if snapshot.enableFallback != enableFallback {
+            enableFallback = snapshot.enableFallback
+            changed += 1
+        }
+        if snapshot.refreshInterval != refreshInterval {
+            refreshInterval = snapshot.refreshInterval
+            changed += 1
+        }
+        if snapshot.refreshOnlyInSession != refreshOnlyInSession {
+            refreshOnlyInSession = snapshot.refreshOnlyInSession
+            changed += 1
+        }
+        if snapshot.customSessions != customSessions {
+            customSessions = snapshot.customSessions
+            changed += 1
+        }
+        if snapshot.customSessionsEnabled != customSessionsEnabled {
+            customSessionsEnabled = snapshot.customSessionsEnabled
+            changed += 1
+        }
+        if let format = MenuBarFormat(rawValue: snapshot.menuBarFormat), format != menuBarFormat {
+            menuBarFormat = format
+            changed += 1
+        }
+        if snapshot.menuBarTemplate != menuBarTemplate {
+            menuBarTemplate = snapshot.menuBarTemplate
+            changed += 1
+        }
+        if snapshot.menuBarMaxWidth != menuBarMaxWidth {
+            menuBarMaxWidth = snapshot.menuBarMaxWidth
+            changed += 1
+        }
+        if snapshot.watchlist != watchlist {
+            updateWatchlist(from: WatchlistRotation.join(snapshot.watchlist))
+            changed += 1
+        }
+        if snapshot.rotationEnabled != rotationEnabled {
+            rotationEnabled = snapshot.rotationEnabled
+            changed += 1
+        }
+        if snapshot.rotationInterval != rotationInterval {
+            rotationInterval = snapshot.rotationInterval
+            changed += 1
+        }
+        if snapshot.displayName != displayName {
+            displayName = snapshot.displayName
+            changed += 1
+        }
+        if let preset = ColorPreset(rawValue: snapshot.colorPreset), preset != colorPreset {
+            colorPreset = preset
+            changed += 1
+        }
+        if let color = snapshot.upColor?.color, color != upColor {
+            upColor = color
+            changed += 1
+        }
+        if let color = snapshot.downColor?.color, color != downColor {
+            downColor = color
+            changed += 1
+        }
+        if let color = snapshot.flatColor?.color, color != flatColor {
+            flatColor = color
+            changed += 1
+        }
+        if let language = AppLanguage(rawValue: snapshot.appLanguage), language != appLanguage {
+            appLanguage = language
+            changed += 1
+        }
+        if snapshot.alerts != alerts {
+            alerts = snapshot.alerts
+            changed += 1
+        }
+
+        return changed
+    }
+
     /// 自定义显示名,留空使用接口返回的名称
     @Published var displayName: String {
         didSet {

@@ -73,6 +73,7 @@ Click the number in the menu bar to open the panel; ⚙️ in the top-right open
 | Language | Follow System / 简体中文 / English, applied instantly |
 | Price alerts | Up/down thresholds; the menu bar shows a bell while triggered, re-armed after the price returns |
 | Diagnostics | One click copies version, source status, failure count and current settings to the clipboard |
+| Settings backup | Copy the settings JSON or import it from the clipboard to move between machines; covers watchlist, rotation, alerts and appearance, history excluded |
 
 Symbol syntax: Shanghai `600519.SS`, Shenzhen `000001.SZ`, Hong Kong `0700.HK`, US tickers as-is (`AAPL`).
 

@@ -92,3 +92,14 @@
 "已复制到剪贴板" = "Copied to clipboard";
 "把版本、数据源状态、连续失败次数与当前设置复制到剪贴板,便于贴进 Issue" = "Copy version, source status, failure count and settings to the clipboard for bug reports";
 "只含版本、数据源状态与当前设置,不含历史记录与自选列表内容" = "Contains version, source status and settings only — no history and no watchlist symbols";
+"设置备份" = "Settings backup";
+"复制设置 JSON" = "Copy settings JSON";
+"从剪贴板导入" = "Import from clipboard";
+"包含自选列表、轮显、提醒与外观;不含历史记录" = "Includes watchlist, rotation, alerts and appearance; history is excluded";
+"把当前设置复制成 JSON,可粘贴保存到别处" = "Copy the current settings as JSON you can paste and keep elsewhere";
+"从剪贴板读取设置 JSON 并覆盖当前设置" = "Read settings JSON from the clipboard and overwrite the current settings";
+"设置 JSON 已复制" = "Settings JSON copied";
+"剪贴板里没有文本" = "The clipboard does not contain text";
+"设置没有变化" = "Settings unchanged";
+"已导入 %d 项设置" = "Imported %d settings";
+"导入失败:%@" = "Import failed: %@";

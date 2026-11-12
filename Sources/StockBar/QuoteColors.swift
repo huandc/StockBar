@@ -26,7 +26,7 @@ enum ColorPreset: String, CaseIterable, Identifiable {
 }
 
 /// RGB 分量,用于把 Color 持久化到 UserDefaults
-struct RGBColor: Codable {
+struct RGBColor: Codable, Equatable {
     var red: Double
     var green: Double
     var blue: Double

@@ -209,6 +209,8 @@ struct SettingsView: View {
     @State private var draftAlertThreshold = ""
     /// 「复制诊断信息」按钮的短暂成功提示
     @State private var diagnosticsCopied = false
+    /// 设置导入导出的结果提示
+    @State private var transferNote: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -578,6 +580,59 @@ struct SettingsView: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
+
+            Divider()
+
+            // 备份:换机或多机同步时把设置以 JSON 搬过去
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.tr("设置备份"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Button(model.tr("复制设置 JSON")) {
+                        copySettings()
+                    }
+                    .controlSize(.small)
+                    .help(model.tr("把当前设置复制成 JSON,可粘贴保存到别处"))
+                    Button(model.tr("从剪贴板导入")) {
+                        importSettings()
+                    }
+                    .controlSize(.small)
+                    .help(model.tr("从剪贴板读取设置 JSON 并覆盖当前设置"))
+                    if let note = transferNote {
+                        Text(note)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                Text(model.tr("包含自选列表、轮显、提醒与外观;不含历史记录"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    /// 把当前设置导出为 JSON 放进剪贴板
+    private func copySettings() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(model.exportSettingsText(), forType: .string)
+        transferNote = model.tr("设置 JSON 已复制")
+    }
+
+    /// 从剪贴板读 JSON 覆盖设置;失败时保留原设置并显示原因
+    private func importSettings() {
+        guard let text = NSPasteboard.general.string(forType: .string) else {
+            transferNote = model.tr("剪贴板里没有文本")
+            return
+        }
+        do {
+            let changed = try model.importSettings(from: text)
+            loadDrafts()
+            transferNote = changed == 0 ? model.tr("设置没有变化") : model.trf("已导入 %d 项设置", changed)
+        } catch {
+            transferNote = model.trf("导入失败:%@", error.localizedDescription)
         }
     }
 
