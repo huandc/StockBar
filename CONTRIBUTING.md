@@ -42,6 +42,21 @@ Tests must not touch the network. HTTP-dependent code takes an injectable `HTTPT
 changing the panel or menu bar layout, and commit the regenerated PNGs. Rendering is deterministic:
 if the images change without a UI change, the sample data or a time field is not frozen.
 
+## Verifying the menu bar item
+
+The menu bar item is a real `NSStatusItem` (see `StatusItemController`), so a broken change can
+leave the app running with nothing visible. `./.build/debug/StockBar --status-self-test` starts
+the app, prints the item width, whether it has a window, and whether the popover opens, then exits —
+this works without an unlocked screen:
+
+```
+status length=89.5 button=true window=true
+popover shown=true size=(360.0, 147.0)
+self-test done
+```
+
+`length=0` or `window=false` means the item was never installed.
+
 ## Project layout
 
 | File | Responsibility |

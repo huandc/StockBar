@@ -20,6 +20,7 @@ struct SettingsTransferTests {
                 SessionRange(startMinute: 13 * 60, endMinute: 15 * 60),
             ],
             menuBarFormat: MenuBarFormat.namePrice.rawValue,
+            menuBarClickAction: MenuBarClickAction.nextSymbol.rawValue,
             menuBarTemplate: "{name} {price}",
             menuBarMaxWidth: 260,
             watchlist: ["AAPL", "MSFT"],
@@ -71,6 +72,7 @@ struct SettingsTransferTests {
               "refreshInterval": 7,
               "rotationInterval": 45,
               "menuBarFormat": "weird",
+              "menuBarClickAction": "weird",
               "colorPreset": "weird",
               "appLanguage": "fr",
               "menuBarMaxWidth": 999,
@@ -94,6 +96,7 @@ struct SettingsTransferTests {
         #expect(decoded.refreshInterval == 5)
         #expect(decoded.rotationInterval == 30)
         #expect(decoded.menuBarFormat == MenuBarFormat.codePrice.rawValue)
+        #expect(decoded.menuBarClickAction == MenuBarClickAction.openPanel.rawValue)
         #expect(decoded.colorPreset == ColorPreset.international.rawValue)
         #expect(decoded.appLanguage == AppLanguage.system.rawValue)
         #expect(decoded.menuBarMaxWidth == MenuBarLayout.widthRange.upperBound)

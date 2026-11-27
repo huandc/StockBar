@@ -144,7 +144,12 @@
     `SettingsTransfer.encode/decode` 为纯函数;`QuoteModel.settingsSnapshot/exportSettingsText/importSettings/apply`
     返回实际改动字段数;`ContentView` 设置页「设置备份」区:复制 JSON 与从剪贴板导入,失败时保留原设置并提示原因;
     新增 5 个用例(往返、缺字段、越界收敛、空时段关开关、错误分支)
-- [ ] **菜单栏点击行为可配置**:默认弹面板,可改成「立即刷新」或「切到下一个符号」
+- [x] **菜单栏点击行为可配置**:默认弹面板,可改成「立即刷新」或「切到下一个符号」
+  - 2026-11-27 完成:SwiftUI 的 `MenuBarExtra` 只支持「点一下弹面板」,改用自建 `StatusItemController`
+    (NSStatusItem + `ClickableHostingView` 接管左右键 + NSPopover 承载 `ContentView`),
+    `MenuBarClickAction` 三档(left 键行为)与设置页选择器,右键始终打开面板;
+    宽度按 SwiftUI 内容 `fittingSize` 动态调整;新增 `--status-self-test` 自检(锁屏/CI 下验证菜单栏项与面板)
+
 - [ ] **发布 v1.2.0**:收齐下一批功能后按 v1.1.0 的流程发版
 
 ## 已完成
@@ -168,3 +173,4 @@
 - [x] 2026-11-10 发布 v1.1.0:release 分支触发打包与 Release(资产 339KB),Cask 版本与 sha256 同步,git-cliff 生成发布说明
 - [x] 2026-11-11 诊断信息一键复制:新增 `Diagnostics`(纯函数快照渲染),设置页按钮把版本/数据源状态/失败次数/设置复制进剪贴板;新增 4 个用例
 - [x] 2026-11-12 设置导入导出:新增 SettingsTransfer(带版本号的可移植 JSON,非法值收敛),设置页支持复制/导入并报告改动项数;新增 5 个用例
+- [x] 2026-11-27 菜单栏点击行为可配置:改用自建 NSStatusItem + NSPopover,左键行为可选(弹面板/刷新/切符号),右键始终开面板;新增点击行为用例

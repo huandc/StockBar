@@ -18,6 +18,7 @@ struct SettingsSnapshot: Codable, Equatable {
     var customSessionsEnabled: Bool = false
     var customSessions: [SessionRange] = []
     var menuBarFormat: String = MenuBarFormat.codePrice.rawValue
+    var menuBarClickAction: String = MenuBarClickAction.openPanel.rawValue
     var menuBarTemplate: String = ""
     var menuBarMaxWidth: Double = MenuBarLayout.defaultMaxWidth
     var watchlist: [String] = []
@@ -41,6 +42,7 @@ struct SettingsSnapshot: Codable, Equatable {
         customSessionsEnabled: Bool = false,
         customSessions: [SessionRange] = [],
         menuBarFormat: String = MenuBarFormat.codePrice.rawValue,
+        menuBarClickAction: String = MenuBarClickAction.openPanel.rawValue,
         menuBarTemplate: String = "",
         menuBarMaxWidth: Double = MenuBarLayout.defaultMaxWidth,
         watchlist: [String] = [],
@@ -63,6 +65,7 @@ struct SettingsSnapshot: Codable, Equatable {
         self.customSessionsEnabled = customSessionsEnabled
         self.customSessions = customSessions
         self.menuBarFormat = menuBarFormat
+        self.menuBarClickAction = menuBarClickAction
         self.menuBarTemplate = menuBarTemplate
         self.menuBarMaxWidth = menuBarMaxWidth
         self.watchlist = watchlist
@@ -101,6 +104,9 @@ struct SettingsSnapshot: Codable, Equatable {
             ?? defaults.customSessions
         menuBarFormat =
             try container.decodeIfPresent(String.self, forKey: .menuBarFormat) ?? defaults.menuBarFormat
+        menuBarClickAction =
+            try container.decodeIfPresent(String.self, forKey: .menuBarClickAction)
+            ?? defaults.menuBarClickAction
         menuBarTemplate =
             try container.decodeIfPresent(String.self, forKey: .menuBarTemplate) ?? defaults.menuBarTemplate
         menuBarMaxWidth =
@@ -131,6 +137,9 @@ struct SettingsSnapshot: Codable, Equatable {
         if QuoteProvider(rawValue: provider) == nil { copy.provider = QuoteProvider.yahoo.rawValue }
         if MenuBarFormat(rawValue: menuBarFormat) == nil {
             copy.menuBarFormat = MenuBarFormat.codePrice.rawValue
+        }
+        if MenuBarClickAction(rawValue: menuBarClickAction) == nil {
+            copy.menuBarClickAction = MenuBarClickAction.openPanel.rawValue
         }
         if ColorPreset(rawValue: colorPreset) == nil {
             copy.colorPreset = ColorPreset.international.rawValue
