@@ -123,6 +123,13 @@ final class QuoteModel: ObservableObject {
         }
     }
 
+    /// 点击菜单栏图标的行为(默认弹面板)
+    @Published var menuBarClickAction: MenuBarClickAction {
+        didSet {
+            UserDefaults.standard.set(menuBarClickAction.rawValue, forKey: "menuBarClickAction")
+        }
+    }
+
     /// 自定义模板(仅 menuBarFormat == .custom 生效)
     @Published var menuBarTemplate: String {
         didSet {
@@ -214,6 +221,7 @@ final class QuoteModel: ObservableObject {
             customSessionsEnabled: customSessionsEnabled,
             customSessions: customSessions,
             menuBarFormat: menuBarFormat.rawValue,
+            menuBarClickAction: menuBarClickAction.rawValue,
             menuBarTemplate: menuBarTemplate,
             menuBarMaxWidth: menuBarMaxWidth,
             watchlist: watchlist,
@@ -275,6 +283,12 @@ final class QuoteModel: ObservableObject {
         }
         if let format = MenuBarFormat(rawValue: snapshot.menuBarFormat), format != menuBarFormat {
             menuBarFormat = format
+            changed += 1
+        }
+        if let action = MenuBarClickAction(rawValue: snapshot.menuBarClickAction),
+            action != menuBarClickAction
+        {
+            menuBarClickAction = action
             changed += 1
         }
         if snapshot.menuBarTemplate != menuBarTemplate {
@@ -412,6 +426,8 @@ final class QuoteModel: ObservableObject {
         enableFallback = defaults.object(forKey: "enableFallback") as? Bool ?? true
         menuBarFormat = MenuBarFormat(rawValue: defaults.string(forKey: "menuBarFormat") ?? "") ?? .codePrice
         menuBarMaxWidth = defaults.object(forKey: "menuBarMaxWidth") as? Double ?? MenuBarLayout.defaultMaxWidth
+        menuBarClickAction =
+            MenuBarClickAction(rawValue: defaults.string(forKey: "menuBarClickAction") ?? "") ?? .openPanel
         menuBarTemplate = defaults.string(forKey: "menuBarTemplate") ?? ""
         displayName = defaults.string(forKey: "displayName") ?? ""
         appLanguage = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .system

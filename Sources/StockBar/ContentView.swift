@@ -198,6 +198,7 @@ struct SettingsView: View {
     @State private var draftRotationEnabled: Bool = false
     @State private var draftRotationInterval: Int = 10
     @State private var draftMenuBarMaxWidth = MenuBarLayout.defaultMaxWidth
+    @State private var draftMenuBarClickAction: MenuBarClickAction = .openPanel
     @State private var draftDisplayName = ""
     @State private var draftColorPreset: ColorPreset = .international
     @State private var draftUpColor = ColorPreset.defaultUp
@@ -380,6 +381,24 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                         .font(.caption)
                 }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(model.tr("点击菜单栏图标"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Picker(model.tr("点击菜单栏图标"), selection: $draftMenuBarClickAction) {
+                        ForEach(MenuBarClickAction.allCases) { action in
+                            Text(action.label(model.localization)).tag(action)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+                Text(draftMenuBarClickAction.hint(model.localization))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -684,6 +703,7 @@ struct SettingsView: View {
         draftMenuBarFormat = model.menuBarFormat
         draftMenuBarTemplate = model.menuBarTemplate
         draftMenuBarMaxWidth = model.menuBarMaxWidth
+        draftMenuBarClickAction = model.menuBarClickAction
         draftWatchlistText = WatchlistRotation.join(model.watchlist)
         draftRotationEnabled = model.rotationEnabled
         draftRotationInterval = model.rotationInterval
@@ -727,6 +747,7 @@ struct SettingsView: View {
         model.updateWatchlist(from: draftWatchlistText)
         model.rotationEnabled = draftRotationEnabled
         model.menuBarMaxWidth = draftMenuBarMaxWidth
+        model.menuBarClickAction = draftMenuBarClickAction
         model.displayName = draftDisplayName
         model.colorPreset = draftColorPreset
         model.upColor = draftUpColor

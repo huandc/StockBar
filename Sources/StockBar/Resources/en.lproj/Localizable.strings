@@ -103,3 +103,9 @@
 "设置没有变化" = "Settings unchanged";
 "已导入 %d 项设置" = "Imported %d settings";
 "导入失败:%@" = "Import failed: %@";
+"点击菜单栏图标" = "Menu bar click";
+"弹出面板" = "Open panel";
+"切到下一个符号" = "Next symbol";
+"点一下展开面板,再点一下收起" = "Click to toggle the panel";
+"点一下立刻拉一次行情,面板需要右键打开" = "Click to fetch quotes now; right-click opens the panel";
+"点一下切到自选里的下一只;未开启轮显时等价于立即刷新" = "Click to switch to the next symbol; falls back to refreshing when rotation is off";

@@ -4,7 +4,6 @@ import SwiftUI
 @main
 struct StockBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @StateObject private var model = QuoteModel()
 
     init() {
         // 文档截图模式:渲染完即退出,不进入 App 生命周期
@@ -21,20 +20,29 @@ struct StockBarApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra {
-            ContentView()
-                .environmentObject(model)
-        } label: {
-            MenuBarLabel(model: model)
-        }
-        .menuBarExtraStyle(.window)
+        // 菜单栏应用没有主窗口;保留一个空 Settings 场景只为满足 App 协议,
+        // 真正的界面由 AppDelegate 里的 StatusItemController 用 NSPopover 承载。
+        Settings { EmptyView() }
     }
 }
 
 /// 隐藏 Dock 图标,让应用只存在于菜单栏
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let model = QuoteModel()
+    private var statusController: StatusItemController?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        let controller = StatusItemController(model: model)
+        statusController = controller
+        if CommandLine.arguments.contains(StatusItemController.selfTestFlag) {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                controller.runSelfTest()
+                exit(0)
+            }
+        }
     }
 }
 
